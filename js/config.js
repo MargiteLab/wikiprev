@@ -7,6 +7,6 @@
  * Leave them empty to run in local mode (data stays in this browser).
  */
 window.WIKIPREV_CONFIG = {
-    supabaseUrl: '',      // e.g. 'https://abcdefghijklm.supabase.co'
-    supabaseAnonKey: ''   // Project Settings > API > anon public key
+    supabaseUrl: 'https://ihvumzwnrvvxtzjizdsq.supabase.co',
+    supabaseAnonKey: 'sb_publishable_zD0_YWfBX-uMrm6rR_vmjw_pO7c15Fq'   // publishable (public) key
 };
