@@ -72,12 +72,57 @@
 
     /* ---------- Featured prediction ---------- */
 
-    function pickFeatured(list) {
-        if (!list.length) return null;
-        if (list.length > 1) {
-            list = list.filter(function (p) { return p.id !== featuredId; });
-        }
-        return list[Math.floor(Math.random() * list.length)];
+    // A prediction counts as "just expired" for this many days after its due date.
+    var RECENTLY_EXPIRED_DAYS = 30;
+
+    function todayIso() {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function daysBetween(fromIso, toIso) {
+        return Math.round((Date.parse(toIso) - Date.parse(fromIso)) / 86400000);
+    }
+
+    /* Order in which predictions are featured:
+     * 1. expired in the last RECENTLY_EXPIRED_DAYS days, most recent first;
+     * 2. not yet expired (due today or later), soonest first;
+     * 3. expired longer ago, most recent first;
+     * 4. without a due date. */
+    function featuredOrder(list) {
+        var today = todayIso();
+        var recent = [], upcoming = [], older = [], undated = [];
+        list.forEach(function (p) {
+            if (!p.dueDate) undated.push(p);
+            else if (p.dueDate >= today) upcoming.push(p);
+            else if (daysBetween(p.dueDate, today) <= RECENTLY_EXPIRED_DAYS) recent.push(p);
+            else older.push(p);
+        });
+        var asc = function (a, b) { return a.dueDate.localeCompare(b.dueDate); };
+        var desc = function (a, b) { return b.dueDate.localeCompare(a.dueDate); };
+        return recent.sort(desc).concat(upcoming.sort(asc), older.sort(desc), undated);
+    }
+
+    /* "Scade tra 12 giorni", "Scaduta da 3 giorni", ... */
+    function dueStatus(p) {
+        if (!p.dueDate) return null;
+        var days = daysBetween(todayIso(), p.dueDate);
+        if (days === 0) return { text: 'Scade oggi', expired: false };
+        if (days === 1) return { text: 'Scade domani', expired: false };
+        if (days > 1) return { text: 'Scade tra ' + days + ' giorni', expired: false };
+        if (days === -1) return { text: 'Scaduta ieri', expired: true };
+        return { text: 'Scaduta da ' + (-days) + ' giorni', expired: true };
+    }
+
+    function firstFeatured() {
+        return featuredOrder(store.all())[0] || null;
+    }
+
+    function nextFeatured() {
+        var order = featuredOrder(store.all());
+        if (!order.length) return null;
+        var i = order.findIndex(function (p) { return p.id === featuredId; });
+        return order[(i + 1) % order.length];
     }
 
     function renderFeatured(p) {
@@ -89,19 +134,26 @@
             return;
         }
         featuredId = p.id;
+        var status = dueStatus(p);
+        var total = store.all().length;
         [
+            status ? el('p', { className: 'due-status' + (status.expired ? ' expired' : '') }, [
+                icon(status.expired ? 'fas fa-hourglass-end' : 'fas fa-hourglass-half'), ' ' + status.text
+            ]) : null,
             el('h3', { text: p.title }),
             p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
             el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
             metaTags(p),
             p.description ? el('p', { text: p.description }) : null,
-            el('button', { type: 'button', className: 'view-all', id: 'shuffle-featured' }, [
-                icon('fas fa-random'), " Mostrane un'altra"
-            ])
+            total > 1 ? el('button', { type: 'button', className: 'view-all', id: 'next-featured' }, [
+                icon('fas fa-forward'), ' Mostra la successiva'
+            ]) : null
         ].forEach(function (node) { if (node) box.appendChild(node); });
-        $('shuffle-featured').addEventListener('click', function () {
-            renderFeatured(pickFeatured(store.all()));
-        });
+        if (total > 1) {
+            $('next-featured').addEventListener('click', function () {
+                renderFeatured(nextFeatured());
+            });
+        }
     }
 
     /* ---------- List and filters ---------- */
@@ -221,7 +273,7 @@
             : 'Previsione aggiunta, ma non è stato possibile salvarla in questo browser: andrà persa ricaricando la pagina.',
             result.saved ? 'success' : 'error');
         renderList();
-        if (!featuredId) renderFeatured(result.prediction);
+        renderFeatured(firstFeatured());
     }
 
     function onDelete(event) {
@@ -241,7 +293,7 @@
         var id = btn.getAttribute('data-id');
         store.remove(id);
         renderList();
-        if (id === featuredId) renderFeatured(pickFeatured(store.all()));
+        renderFeatured(id === featuredId ? firstFeatured() : store.all().find(function (p) { return p.id === featuredId; }));
     }
 
     /* ---------- Setup ---------- */
@@ -284,7 +336,7 @@
         $('prediction-form').addEventListener('submit', onSubmit);
         $('predictions-grid').addEventListener('click', onDelete);
 
-        renderFeatured(pickFeatured(store.all()));
+        renderFeatured(firstFeatured());
         renderList();
     });
 })();

@@ -558,3 +558,19 @@ footer {
     background-color: #eceff1;
     color: #455a64;
 }
+
+.due-status {
+    display: inline-block;
+    margin-bottom: 0.8rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background-color: #fef5e7;
+    color: #b9770e;
+}
+
+.due-status.expired {
+    background-color: #fdedec;
+    color: #c0392b;
+}
