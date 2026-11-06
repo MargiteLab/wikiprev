@@ -37,7 +37,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 4;
+    var SEED_VERSION = 5;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -210,7 +210,59 @@
     // version of the page, which used numeric ids).
     var RETIRED_SEED_IDS = { 3: ['1', '2', 'seed-1', 'seed-2', 'seed-3', 'seed-4'] };
 
-    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3 };
+    // Real predictions whose due date passed in October 2026 (added November 2026).
+    var SEED_V5 = [
+        {
+            id: 'seed-v5-ponte-cipess-ottobre',
+            title: 'Il CIPESS approverà la nuova delibera sul Ponte sullo Stretto entro ottobre 2026',
+            author: "Pietro Ciucci, amministratore delegato di Stretto di Messina",
+            source: 'Il Nord Est',
+            url: 'https://www.ilnordest.it/italia-ed-esteri/ponte-stretto-ciucci-delibera-cipess-entro-ottobre-previsione-realistica-ar2xsqk8',
+            category: 'infrastructure',
+            madeOn: '2026-10-07',
+            dueDate: '2026-10-31',
+            description: "Ciucci ha definito \"abbastanza prudente e realistica\" la previsione di una nuova delibera del CIPESS entro ottobre, precisando che non si possono porre scadenze al CIPESS. La delibera serve a superare i rilievi con cui la Corte dei conti aveva negato la registrazione di quella dell'agosto 2025.",
+            createdAt: '2026-11-06T14:00:00.000Z'
+        },
+        {
+            id: 'seed-v5-cervinia-apertura-24-ottobre',
+            title: 'Gli impianti di Breuil-Cervinia apriranno il 24 ottobre 2026',
+            author: 'Comprensorio Breuil-Cervinia',
+            source: 'Funivie.it',
+            url: 'https://funivie.it/it/articoli/apertura-impianti-2026-date-comprensori/',
+            category: 'sports',
+            madeOn: '',
+            dueDate: '2026-10-24',
+            description: "Il calendario delle aperture per la stagione 2026-2027 indicava il 24 ottobre per Breuil-Cervinia e Solda, e il 28 novembre per Livigno e altre località.",
+            createdAt: '2026-11-06T14:01:00.000Z'
+        },
+        {
+            id: 'seed-v5-li-auto-i6-ottobre',
+            title: 'Li Auto presenterà la nuova i6 a fine ottobre 2026',
+            author: 'Li Auto',
+            source: 'CnEVPost',
+            url: 'https://cnevpost.com/2026/09/23/li-auto-moves-2026-i6-launch-to-late-oct/',
+            category: 'technology',
+            madeOn: '2026-09-23',
+            dueDate: '2026-10-31',
+            description: "La casa automobilistica cinese ha spostato a fine ottobre il lancio della i6 2026, mantenendo l'inizio delle consegne ai clienti a inizio novembre.",
+            createdAt: '2026-11-06T14:02:00.000Z'
+        },
+        {
+            id: 'seed-v5-phantom-blade-zero-29-ottobre',
+            title: 'Il videogioco Phantom Blade Zero uscirà il 29 ottobre 2026',
+            author: 'S-GAME, sviluppatore del gioco',
+            source: 'Instant Gaming News',
+            url: 'https://news.instant-gaming.com/en/articles/19882-phantom-blade-zero-has-been-delayed-to-october-29-2026',
+            category: 'technology',
+            madeOn: '',
+            dueDate: '2026-10-29',
+            description: "Dopo un rinvio, gli sviluppatori hanno fissato l'uscita su PS5 e PC al 29 ottobre 2026, spiegando di aver bisogno di altri 50 giorni di produzione per migliorare il gioco.",
+            createdAt: '2026-11-06T14:03:00.000Z'
+        }
+    ];
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5 };
 
     function seedsAfter(version) {
         var out = [];
