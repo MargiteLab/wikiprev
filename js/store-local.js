@@ -22,7 +22,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 8;
+    var SEED_VERSION = 9;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -282,7 +282,7 @@
             title: "L'Italia ratificherà il trattato sulla Torino-Lione nei prossimi giorni",
             author: 'Governo italiano',
             source: 'La Stampa',
-            url: '',
+            url: 'http://www.archiviolastampa.it/component/option,com_lastampa/task,search/mod,libera/action,viewer/Itemid,3/page,20/articleid,0266_01_2002_0074_0022_2006045/',
             category: 'tav',
             madeOn: '2002-03-16',
             dueDate: '2002-04-30',
@@ -294,7 +294,7 @@
             title: 'La fase di studio preliminare della Torino-Lione si concluderà nel 2003',
             author: 'LTF (Lyon Turin Ferroviaire)',
             source: 'La Stampa',
-            url: '',
+            url: 'http://www.archiviolastampa.it/component/option,com_lastampa/task,search/mod,libera/action,viewer/Itemid,3/page,20/articleid,0266_01_2002_0074_0022_2006045/',
             category: 'tav',
             madeOn: '2002-03-16',
             dueDate: '2003-12-31',
@@ -306,7 +306,7 @@
             title: 'I primi cantieri della Torino-Lione sul versante francese partiranno nel 2004',
             author: 'LTF (Lyon Turin Ferroviaire)',
             source: 'La Stampa',
-            url: '',
+            url: 'http://www.archiviolastampa.it/component/option,com_lastampa/task,search/mod,libera/action,viewer/Itemid,3/page,20/articleid,0266_01_2002_0074_0022_2006045/',
             category: 'tav',
             madeOn: '2002-03-16',
             dueDate: '2004-12-31',
@@ -318,7 +318,7 @@
             title: 'I lavori della Torino-Lione sul versante italiano partiranno a metà 2005',
             author: 'LTF (Lyon Turin Ferroviaire)',
             source: 'La Stampa',
-            url: '',
+            url: 'http://www.archiviolastampa.it/component/option,com_lastampa/task,search/mod,libera/action,viewer/Itemid,3/page,20/articleid,0266_01_2002_0074_0022_2006045/',
             category: 'tav',
             madeOn: '2002-03-16',
             dueDate: '2005-06-30',
@@ -330,7 +330,7 @@
             title: 'I lavori della Torino-Lione finiranno nel 2012',
             author: 'Conferenza intergovernativa Italia-Francia',
             source: 'La Stampa',
-            url: '',
+            url: 'http://www.archiviolastampa.it/component/option,com_lastampa/task,search/mod,libera/action,viewer/Itemid,3/page,20/articleid,0266_01_2002_0074_0022_2006045/',
             category: 'tav',
             madeOn: '2002-03-16',
             dueDate: '2012-12-31',
@@ -342,7 +342,7 @@
             title: 'La Torino-Lione entrerà in servizio nel 2013',
             author: 'LTF (Lyon Turin Ferroviaire)',
             source: 'La Stampa',
-            url: '',
+            url: 'http://www.archiviolastampa.it/component/option,com_lastampa/task,search/mod,libera/action,viewer/Itemid,3/page,20/articleid,0266_01_2002_0074_0022_2006045/',
             category: 'tav',
             madeOn: '2002-03-16',
             dueDate: '2013-12-31',
