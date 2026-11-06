@@ -80,6 +80,23 @@
         return el('i', { className: classes, 'aria-hidden': 'true' });
     }
 
+    /* Date and time a prediction was added to WikiPrev, in the viewer's time zone. */
+    function formatInserted(isoTimestamp) {
+        var d = new Date(isoTimestamp);
+        if (!isoTimestamp || isNaN(d)) return '';
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+        return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+            ' alle ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    /* "Caricata da Sergio il 06/11/2026 alle 18:05" (or without the name). */
+    function insertedNode(p) {
+        var when = formatInserted(p.createdAt);
+        if (!when && !p.createdByName) return el('span');
+        var text = (p.createdByName ? 'Caricata da ' + p.createdByName : 'Inserita') + (when ? ' il ' + when : '');
+        return el('span', { className: 'added-by', title: 'Inserimento in WikiPrev' }, [icon('fas fa-user-edit'), ' ' + text]);
+    }
+
     function formatDate(iso) {
         if (!iso) return '—';
         var parts = iso.split('-');
@@ -187,6 +204,7 @@
             el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
             metaTags(p),
             p.description ? el('p', { text: p.description }) : null,
+            el('p', { className: 'featured-inserted' }, [insertedNode(p)]),
             total > 1 ? el('button', { type: 'button', className: 'view-all', id: 'next-featured' }, [
                 icon('fas fa-forward'), ' Mostra la successiva'
             ]) : null
@@ -251,9 +269,7 @@
                 metaTags(p),
                 el('p', { text: p.description || '' }),
                 el('div', { className: 'card-actions' }, [
-                    p.createdByName
-                        ? el('span', { className: 'added-by' }, [icon('fas fa-user-edit'), ' Caricata da ' + p.createdByName])
-                        : el('span'),
+                    insertedNode(p),
                     canDelete() ? el('button', {
                         type: 'button',
                         className: 'delete-btn',

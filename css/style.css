@@ -670,3 +670,7 @@ footer {
     cursor: pointer;
     font-size: 1rem;
 }
+
+.featured-inserted {
+    margin-top: -0.5rem;
+}
