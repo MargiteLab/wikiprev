@@ -674,3 +674,67 @@ footer {
 .featured-inserted {
     margin-top: -0.5rem;
 }
+
+/* ---- Tags ---- */
+
+.tag.label-tag {
+    background-color: #eaf2fb;
+    color: #1f5f99;
+    border: 1px dashed #9cc3e6;
+}
+
+.tag-picker {
+    border: none;
+    padding: 0;
+}
+
+.tag-picker legend {
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.tag-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.tag-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid #cfd8e3;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    background-color: white;
+}
+
+.tag-option:has(input:checked) {
+    background-color: #eaf2fb;
+    border-color: #3498db;
+    color: #1f5f99;
+}
+
+.new-tag-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.new-tag-row input {
+    flex: 1 1 220px;
+    padding: 0.7rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.tag-picker .tag-option input {
+    width: auto;
+    padding: 0;
+    margin: 0;
+}

@@ -4,7 +4,8 @@
  * e.g. for quick previews. Same asynchronous interface as store-supabase.js.
  *
  * Stored format: { version: 1, seedVersion: N, predictions: [...],
- *                 categories: { id: { label, icon } } }   (categories added here)
+ *                 categories: { id: { label, icon } },    (categories added here)
+ *                 tags: { id: { label } } }               (tags added here)
  */
 (function (global) {
     'use strict';
@@ -15,6 +16,8 @@
     var model = global.WikiPrevModel;
     var CATEGORIES = Object.assign({}, model.DEFAULT_CATEGORIES);
     var customCategories = {};
+    var TAGS = Object.assign({}, model.DEFAULT_TAGS);
+    var customTags = {};
     var str = model.str;
     var isValidDate = model.isValidDate;
     var isValidUrl = model.isValidUrl;
@@ -22,7 +25,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 9;
+    var SEED_VERSION = 10;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -87,6 +90,16 @@
     /* Bring any stored record (including the pre-v1 format that used `expiry`
      * and `verified`/`outcome`) into the current shape. Returns null if the
      * record is unusable. */
+    function normalizeTags(list) {
+        if (!Array.isArray(list)) return [];
+        var seen = {};
+        return list.filter(function (t) {
+            if (!t || typeof t.id !== 'string' || !str(t.label) || seen[t.id]) return false;
+            seen[t.id] = true;
+            return true;
+        }).map(function (t) { return { id: t.id, label: str(t.label) }; });
+    }
+
     function normalize(raw) {
         if (!raw || typeof raw !== 'object') return null;
         var p = {
@@ -100,7 +113,8 @@
             dueDate: str(raw.dueDate || raw.expiry),
             description: str(raw.description),
             createdAt: str(raw.createdAt),
-            createdByName: str(raw.createdByName)
+            createdByName: str(raw.createdByName),
+            tags: normalizeTags(raw.tags)
         };
         if (!p.title) return null;
         if (!CATEGORIES[p.category]) p.category = 'politics';
@@ -129,6 +143,7 @@
     var SEED_V3 = [
         {
             id: 'seed-v3-ponte-stretto-cantieri',
+            tags: [{ id: 'promesse-politiche', label: 'Promesse politiche' }],
             title: 'I cantieri del Ponte sullo Stretto apriranno entro il 2027',
             author: 'Matteo Salvini',
             source: 'StrettoWeb',
@@ -141,6 +156,7 @@
         },
         {
             id: 'seed-v3-terzo-valico-scavi',
+            tags: [{ id: 'promesse-politiche', label: 'Promesse politiche' }],
             title: 'Gli scavi del Terzo Valico saranno completati entro la primavera 2027',
             author: 'Edoardo Rixi e Calogero Mauceri',
             source: 'ANSA',
@@ -279,6 +295,7 @@
     var SEED_V8 = [
         {
             id: 'seed-v8-tav-2002-ratifica-italia',
+            tags: [{ id: 'promesse-politiche', label: 'Promesse politiche' }],
             title: "L'Italia ratificherà il trattato sulla Torino-Lione nei prossimi giorni",
             author: 'Governo italiano',
             source: 'La Stampa',
@@ -327,6 +344,7 @@
         },
         {
             id: 'seed-v8-tav-2002-fine-lavori-2012',
+            tags: [{ id: 'promesse-politiche', label: 'Promesse politiche' }],
             title: 'I lavori della Torino-Lione finiranno nel 2012',
             author: 'Conferenza intergovernativa Italia-Francia',
             source: 'La Stampa',
@@ -385,14 +403,25 @@
     function loadCustomCategories() {
         var data = readStorage();
         var stored = data && !Array.isArray(data) && data.categories;
-        if (!stored || typeof stored !== 'object') return;
-        Object.keys(stored).forEach(function (id) {
-            var c = stored[id];
-            if (/^[a-z][a-z0-9-]*$/.test(id) && c && str(c.label)) {
-                customCategories[id] = { label: str(c.label), icon: 'fa-tag' };
-                CATEGORIES[id] = customCategories[id];
-            }
-        });
+        if (stored && typeof stored === 'object') {
+            Object.keys(stored).forEach(function (id) {
+                var c = stored[id];
+                if (/^[a-z][a-z0-9-]*$/.test(id) && c && str(c.label)) {
+                    customCategories[id] = { label: str(c.label), icon: 'fa-tag' };
+                    CATEGORIES[id] = customCategories[id];
+                }
+            });
+        }
+        var storedTags = data && !Array.isArray(data) && data.tags;
+        if (storedTags && typeof storedTags === 'object') {
+            Object.keys(storedTags).forEach(function (id) {
+                var t = storedTags[id];
+                if (/^[a-z][a-z0-9-]*$/.test(id) && t && str(t.label)) {
+                    customTags[id] = { label: str(t.label) };
+                    TAGS[id] = customTags[id];
+                }
+            });
+        }
     }
 
     loadCustomCategories();
@@ -405,7 +434,8 @@
                 version: SCHEMA_VERSION,
                 seedVersion: SEED_VERSION,
                 predictions: predictions,
-                categories: customCategories
+                categories: customCategories,
+                tags: customTags
             }));
             return true;
         } catch (e) {
@@ -428,7 +458,11 @@
             dueDate: input.dueDate,
             description: input.description,
             createdAt: new Date().toISOString(),
-            createdByName: input.contributor
+            createdByName: input.contributor,
+            tags: (input.tags || []).map(function (label) {
+                var id = tagIdFor(label);
+                return { id: id, label: TAGS[id].label };
+            })
         });
         predictions.push(p);
         var saved = save();
@@ -458,6 +492,19 @@
         return { ok: true, id: id };
     }
 
+    /* Find a tag by name ignoring case, creating it if needed. */
+    function tagIdFor(label) {
+        var clean = str(label).replace(/\s+/g, ' ');
+        var existing = Object.keys(TAGS).filter(function (id) {
+            return TAGS[id].label.toLowerCase() === clean.toLowerCase();
+        })[0];
+        if (existing) return existing;
+        var id = model.categoryIdFor(clean, TAGS, 'tag');
+        customTags[id] = { label: clean };
+        TAGS[id] = customTags[id];
+        return id;
+    }
+
     function all() {
         return predictions.slice();
     }
@@ -472,6 +519,8 @@
         checkAdminCode: function () { return resolved(true); },
         categories: function () { return resolved(Object.assign({}, CATEGORIES)); },
         addCategory: function (label) { return resolved(addCategory(label)); },
+        tags: function () { return resolved(Object.assign({}, TAGS)); },
+        supportsTags: function () { return true; },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },
         remove: function (id) { remove(id); return resolved({ ok: true }); },

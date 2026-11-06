@@ -17,6 +17,9 @@
         });
         var categories = model.DEFAULT_CATEGORIES;
         var categoriesLoaded = false;
+        // False until migration 0009 (tags) has been applied to the database:
+        // the site then keeps working, just without tags.
+        var tagsSupported = true;
 
         function toPrediction(row) {
             return {
@@ -30,14 +33,15 @@
                 dueDate: row.due_on || '',
                 description: row.details || '',
                 createdAt: row.created_at,
-                createdByName: row.created_by_name || ''
+                createdByName: row.created_by_name || '',
+                tags: Array.isArray(row.tags) ? row.tags : []
             };
         }
 
         function describeError(error) {
             var msg = (error && error.message) || String(error);
             // Messages written in Italian by the database functions are shown as they are.
-            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome della categoria)/.test(msg)) return msg;
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome della categoria|Il nome di un'etichetta|Puoi indicare al massimo)/.test(msg)) return msg;
             if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
             if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
             if (/category_id_fkey/.test(msg)) return 'Categoria non valida.';
@@ -66,6 +70,22 @@
                 return Object.assign({}, categories);
             },
 
+            supportsTags: function () {
+                return tagsSupported;
+            },
+
+            tags: async function () {
+                var res = await client.from('tags').select('id, label').order('label');
+                if (res.error && /PGRST205|42P01|does not exist|Could not find the table/i.test(res.error.code + ' ' + res.error.message)) {
+                    tagsSupported = false;
+                    return {};
+                }
+                if (res.error) throw new Error(describeError(res.error));
+                var map = {};
+                res.data.forEach(function (t) { map[t.id] = { label: t.label }; });
+                return map;
+            },
+
             addCategory: async function (label) {
                 var error = model.categoryLabelError(label);
                 if (error) return { ok: false, error: error };
@@ -85,7 +105,7 @@
             add: async function (input) {
                 var errors = model.validate(input, categories);
                 if (errors.length) return { ok: false, errors: errors };
-                var res = await client.rpc('submit_prediction', {
+                var params = {
                     p_contributor_name: model.str(input.contributor),
                     p_statement: model.str(input.title),
                     p_details: model.str(input.description),
@@ -95,7 +115,9 @@
                     p_category_id: model.str(input.category),
                     p_made_on: model.str(input.madeOn) || null,
                     p_due_on: model.str(input.dueDate)
-                });
+                };
+                if (tagsSupported) params.p_tags = (input.tags || []).map(model.str);
+                var res = await client.rpc(tagsSupported ? 'submit_prediction_with_tags' : 'submit_prediction', params);
                 if (res.error) return { ok: false, errors: [describeError(res.error)] };
                 var row = await client.from('predictions_view').select('*').eq('id', res.data).single();
                 if (row.error) return { ok: false, errors: [describeError(row.error)] };

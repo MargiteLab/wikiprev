@@ -36,3 +36,19 @@ from predictions
 where deleted_at is null
 group by 1
 order by 1;
+
+-- Predictions per tag.
+select t.label as etichetta, count(*) as previsioni
+from prediction_tags pt
+join tags t        on t.id = pt.tag_id
+join predictions p on p.id = pt.prediction_id
+where p.deleted_at is null
+group by t.label
+order by previsioni desc, etichetta;
+
+-- Predictions added per month (by insertion date).
+select to_char(date_trunc('month', created_at), 'YYYY-MM') as mese_inserimento, count(*) as previsioni
+from predictions
+where deleted_at is null
+group by 1
+order by 1;

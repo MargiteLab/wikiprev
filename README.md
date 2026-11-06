@@ -10,6 +10,8 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Per ogni previsione si sa chi l'ha caricata
 - Solo l'amministratore, con un codice segreto, può eliminare le previsioni
 - Nuove categorie si aggiungono direttamente dal modulo ("+ Nuova categoria…")
+- Oltre alla categoria, ogni previsione può avere più etichette (es. "Promesse politiche"), selezionabili insieme; nuove etichette si creano dal modulo
+- Ogni previsione mostra quando è stata inserita e da chi
 
 ## Due modalità
 
@@ -44,7 +46,8 @@ Tabelle principali:
 | `people` | chi fa le previsioni: persone, organizzazioni, gruppi |
 | `outlets` | dove sono state pubblicate (testate, siti, programmi) |
 | `categories` | le categorie (si aggiungono anche dal sito; si rinominano o eliminano dal Table Editor) |
-| `predictions` | le previsioni, collegate a persona, fonte, categoria e utente |
+| `predictions` | le previsioni, collegate a persona, fonte, categoria e utente; `created_at` è la data di inserimento |
+| `tags`, `prediction_tags` | le etichette e quali previsioni le hanno (più etichette per previsione) |
 | `prediction_history` | ogni inserimento e modifica, con la riga completa |
 
 Regole per non perdere dati:
@@ -68,6 +71,7 @@ Regole per non perdere dati:
    6. `0006_tav_predictions.sql`
    7. `0007_tav_la_stampa_2002.sql`
    8. `0008_tav_la_stampa_2002_link.sql`
+   9. `0009_tags.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');

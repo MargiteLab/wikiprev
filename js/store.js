@@ -24,7 +24,9 @@
             add: fail,
             remove: fail,
             checkAdminCode: fail,
-            addCategory: fail
+            addCategory: fail,
+            tags: fail,
+            supportsTags: function () { return false; }
         };
     }
 })(window);

@@ -85,6 +85,13 @@
                     </select>
                 </div>
 
+                <div class="field" id="filter-tag-field">
+                    <label for="filter-tag">Etichetta</label>
+                    <select id="filter-tag">
+                        <option value="">Tutte le etichette</option>
+                    </select>
+                </div>
+
                 <div class="field">
                     <label for="filter-from">Scadenza dal</label>
                     <input type="date" id="filter-from">
@@ -180,6 +187,16 @@
                         <input type="date" id="madeOn" name="madeOn">
                     </div>
                 </div>
+
+                <fieldset class="form-group tag-picker" id="tag-picker">
+                    <legend>Etichette</legend>
+                    <div class="tag-options" id="tag-options"></div>
+                    <div class="new-tag-row">
+                        <input type="text" id="newTag" maxlength="40" placeholder="Nuova etichetta, es. Campagna elettorale">
+                        <button type="button" id="add-tag-btn" class="secondary-btn"><i class="fas fa-plus"></i> Aggiungi</button>
+                    </div>
+                    <p class="field-hint">Puoi selezionarne quante vuoi, oppure nessuna. Le nuove etichette saranno disponibili per tutti.</p>
+                </fieldset>
 
                 <div class="form-group">
                     <label for="dueDate">Da verificare entro il <span class="required">*</span></label>

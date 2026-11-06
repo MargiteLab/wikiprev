@@ -9,6 +9,7 @@
 
     var store = window.WikiPrevStore;
     var CATEGORIES = window.WikiPrevModel.DEFAULT_CATEGORIES;
+    var TAGS = window.WikiPrevModel.DEFAULT_TAGS;
     var featuredId = null;
     var items = [];        // predictions currently loaded from the store
     var started = false;   // true once the main view has been set up
@@ -126,7 +127,9 @@
             el('span', { className: 'tag ' + p.category }, [
                 icon('fas ' + cat.icon), ' ' + cat.label
             ])
-        ]);
+        ].concat((p.tags || []).map(function (t) {
+            return el('span', { className: 'tag label-tag', title: 'Etichetta' }, [icon('fas fa-hashtag'), ' ' + t.label]);
+        })));
     }
 
     /* ---------- Featured prediction ---------- */
@@ -222,6 +225,7 @@
         return {
             text: $('filter-text').value.trim().toLowerCase(),
             category: $('filter-category').value,
+            tag: $('filter-tag').value,
             from: $('filter-from').value,
             to: $('filter-to').value,
             sort: $('filter-sort').value
@@ -231,10 +235,12 @@
     function applyFilters(list, f) {
         var result = list.filter(function (p) {
             if (f.category && p.category !== f.category) return false;
+            if (f.tag && !(p.tags || []).some(function (t) { return t.id === f.tag; })) return false;
             if (f.from && (!p.dueDate || p.dueDate < f.from)) return false;
             if (f.to && (!p.dueDate || p.dueDate > f.to)) return false;
             if (f.text) {
-                var haystack = [p.title, p.author, p.source, p.description].join(' ').toLowerCase();
+                var haystack = [p.title, p.author, p.source, p.description]
+                    .concat((p.tags || []).map(function (t) { return t.label; })).join(' ').toLowerCase();
                 if (haystack.indexOf(f.text) === -1) return false;
             }
             return true;
@@ -320,6 +326,7 @@
         var input = {};
         ['contributor', 'title', 'author', 'source', 'url', 'category', 'madeOn', 'dueDate', 'description']
             .forEach(function (name) { input[name] = form.elements[name].value; });
+        input.tags = selectedTags();
 
         var submit = form.querySelector('.submit-btn');
         submit.disabled = true;
@@ -351,6 +358,9 @@
 
         items.push(result.prediction);
         fillSuggestions();
+        try { TAGS = await store.tags(); } catch (e) { /* keep the current list */ }
+        renderTagOptions([]);
+        fillTagFilter();
         saveName(input.contributor.trim());
         form.reset();
         toggleNewCategory();
@@ -427,6 +437,57 @@
         if (!isNew) $('newCategory').value = '';
     }
 
+    /* ---------- Tags ---------- */
+
+    /* Tag checkboxes in the form; `checked` is a list of labels to keep ticked. */
+    function renderTagOptions(checked) {
+        var box = $('tag-options');
+        var keep = (checked || []).map(function (l) { return l.toLowerCase(); });
+        var labels = Object.keys(TAGS).map(function (id) { return TAGS[id].label; });
+        // Tags typed in the form but not saved yet stay in the list.
+        (checked || []).forEach(function (l) {
+            if (!labels.some(function (x) { return x.toLowerCase() === l.toLowerCase(); })) labels.push(l);
+        });
+        labels.sort(function (a, b) { return a.localeCompare(b, 'it'); });
+        box.replaceChildren();
+        labels.forEach(function (label, i) {
+            var id = 'tag-opt-' + i;
+            var input = el('input', { type: 'checkbox', id: id, value: label });
+            input.checked = keep.indexOf(label.toLowerCase()) !== -1;
+            box.appendChild(el('label', { className: 'tag-option', for: id }, [input, ' ' + label]));
+        });
+    }
+
+    function selectedTags() {
+        return Array.prototype.map.call(
+            document.querySelectorAll('#tag-options input:checked'),
+            function (input) { return input.value; });
+    }
+
+    function addTypedTag() {
+        var input = $('newTag');
+        var label = input.value.trim().replace(/\s+/g, ' ');
+        if (!label) return;
+        var error = window.WikiPrevModel.tagLabelError(label);
+        if (error) {
+            showMessage(error, 'error');
+            return;
+        }
+        renderTagOptions(selectedTags().concat([label]));
+        input.value = '';
+        showMessage('');
+    }
+
+    function fillTagFilter() {
+        var select = $('filter-tag');
+        var current = select.value;
+        while (select.options.length > 1) select.remove(1);
+        Object.keys(TAGS).sort(function (a, b) { return TAGS[a].label.localeCompare(TAGS[b].label, 'it'); })
+            .forEach(function (id) { select.appendChild(el('option', { value: id, text: TAGS[id].label })); });
+        select.value = current;
+        if (select.value !== current) select.value = '';
+    }
+
     /* Suggest existing names while typing, so the same person or source is
      * always written the same way (important for statistics). */
     function fillSuggestions() {
@@ -466,6 +527,10 @@
         filterForm.addEventListener('reset', function () { setTimeout(renderList, 0); });
 
         $('prediction-form').addEventListener('submit', onSubmit);
+        $('add-tag-btn').addEventListener('click', addTypedTag);
+        $('newTag').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); addTypedTag(); }
+        });
         $('category').addEventListener('change', function () {
             toggleNewCategory();
             if (!$('new-category-group').hidden) $('newCategory').focus();
@@ -560,6 +625,7 @@
         showStatus('Caricamento delle previsioni…');
         try {
             CATEGORIES = await store.categories();
+            TAGS = await store.tags();
             items = await store.list();
         } catch (e) {
             showStatus(e.message, true);
@@ -567,6 +633,10 @@
         }
         await restoreAdmin();
         fillCategorySelects();
+        renderTagOptions([]);
+        fillTagFilter();
+        $('tag-picker').hidden = !store.supportsTags();
+        $('filter-tag-field').hidden = !store.supportsTags();
         fillSuggestions();
         setupMainView();
         renderFeatured(firstFeatured());
