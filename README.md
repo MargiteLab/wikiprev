@@ -72,6 +72,7 @@ Regole per non perdere dati:
    7. `0007_tav_la_stampa_2002.sql`
    8. `0008_tav_la_stampa_2002_link.sql`
    9. `0009_tags.sql`
+   10. `0010_wrong_predictions_2021_2024.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');

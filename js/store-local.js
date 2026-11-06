@@ -25,7 +25,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 10;
+    var SEED_VERSION = 11;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -369,7 +369,73 @@
         }
     ];
 
-    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8 };
+    // Clearly wrong predictions that came due between late 2021 and 2024
+    // (added November 2026). Each description says how it turned out.
+    var SEED_V11 = [
+        {
+            id: 'seed-v11-planb-bitcoin-135k-2021',
+            title: 'Il bitcoin varrà almeno 135.000 dollari a dicembre 2021',
+            author: 'PlanB',
+            source: 'FXStreet',
+            url: 'https://www.fxstreet.com/cryptocurrencies/news/bitcoin-stock-to-flow-model-invalidated-as-btc-closes-2021-below-100-000-202201010939',
+            category: 'economics',
+            madeOn: '',
+            dueDate: '2021-12-31',
+            description: "L'analista anonimo PlanB, autore del modello «stock-to-flow», aveva indicato come scenario minimo («floor model») 98.000 dollari a novembre e 135.000 a dicembre 2021, impegnandosi a considerare invalidata la previsione se il bitcoin non avesse raggiunto i 100.000 dollari entro fine anno. Com'è andata: il bitcoin ha chiuso il 2021 sotto i 50.000 dollari e a giugno 2022 è sceso fino a circa 17.600.",
+            createdAt: '2026-11-06T19:00:00.000Z'
+        },
+        {
+            id: 'seed-v11-lagarde-tassi-2022',
+            title: 'È molto improbabile che la BCE alzi i tassi di interesse nel 2022',
+            author: 'Christine Lagarde',
+            source: 'Euronews',
+            url: 'https://www.euronews.com/2021/12/16/ecb-policy-rates-lagarde',
+            category: 'economics',
+            madeOn: '2021-12-16',
+            dueDate: '2022-12-31',
+            description: "Nella conferenza stampa del 16 dicembre 2021 la presidente della BCE ha ribadito che un rialzo dei tassi nel 2022 era «molto improbabile», come aveva già detto a novembre. Com'è andata: con l'inflazione in forte crescita, la BCE ha alzato i tassi a luglio 2022, per la prima volta in 11 anni, e ancora più volte entro dicembre.",
+            createdAt: '2026-11-06T19:01:00.000Z'
+        },
+        {
+            id: 'seed-v11-fed-inflazione-2022',
+            title: "L'inflazione negli Stati Uniti (indice PCE) sarà del 2,6% nel 2022",
+            author: 'Federal Reserve (FOMC)',
+            source: 'Federal Reserve, Summary of Economic Projections',
+            url: 'https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20211215.htm',
+            category: 'economics',
+            madeOn: '2021-12-15',
+            dueDate: '2022-12-31',
+            description: "Nelle proiezioni del 15 dicembre 2021 la mediana dei membri del FOMC indicava un'inflazione PCE del 2,6% nel 2022 (dal quarto trimestre 2021 al quarto trimestre 2022), in calo dal 5,3% del 2021. Com'è andata: secondo i dati definitivi del BEA l'inflazione PCE 2022 è stata del 5,7% (sempre sul quarto trimestre), con un picco del 7,0% a giugno.",
+            createdAt: '2026-11-06T19:02:00.000Z'
+        },
+        {
+            id: 'seed-v11-musk-robotaxi-2024',
+            title: 'Tesla produrrà in grandi volumi un robotaxi senza volante né pedali nel 2024',
+            author: 'Elon Musk',
+            source: 'TechCrunch',
+            url: 'https://techcrunch.com/2022/04/20/elon-musk-mass-produce-robotaxi-by-2024',
+            category: 'technology',
+            madeOn: '2022-04-20',
+            dueDate: '2024-12-31',
+            description: "Durante la presentazione dei risultati del primo trimestre 2022 Musk ha detto che Tesla puntava a «raggiungere la produzione in volume nel 2024» di un robotaxi dedicato, senza volante né pedali, e che una corsa sarebbe costata meno di un biglietto dell'autobus. Già nel 2019 aveva promesso robotaxi per il 2020. Com'è andata: nel 2024 non è partita nessuna produzione in serie; il prototipo «Cybercab» è stato solo presentato a ottobre 2024.",
+            createdAt: '2026-11-06T19:03:00.000Z'
+        },
+        {
+            id: 'seed-v11-salvini-ponte-estate-2024',
+            tags: [{ id: 'promesse-politiche', label: 'Promesse politiche' }],
+            title: "I cantieri del Ponte sullo Stretto apriranno entro l'estate 2024",
+            author: 'Matteo Salvini',
+            source: 'Open',
+            url: 'https://www.open.online/2023/09/28/ponte-sullo-stretto-salvini-inizio-estate-2024/',
+            category: 'infrastructure',
+            madeOn: '2023-09-28',
+            dueDate: '2024-09-22',
+            description: "Al congresso degli ingegneri, il 28 settembre 2023, il ministro delle Infrastrutture ha detto che l'obiettivo era aprire i cantieri «nell'estate dell'anno del Signore 2024», come aveva già detto a maggio e ripetuto alla Camera il 4 ottobre 2023. Com'è andata: nell'estate 2024 i cantieri non sono stati aperti; a giugno 2024 il direttore della società Stretto di Messina parlava di almeno un anno e mezzo, e la data è poi slittata più volte.",
+            createdAt: '2026-11-06T19:04:00.000Z'
+        }
+    ];
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11 };
 
     function seedsAfter(version) {
         var out = [];
