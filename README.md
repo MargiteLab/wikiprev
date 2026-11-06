@@ -66,6 +66,7 @@ Regole per non perdere dati:
    4. `0004_admin_only_delete.sql`
    5. `0005_categories_tav_and_user_defined.sql`
    6. `0006_tav_predictions.sql`
+   7. `0007_tav_la_stampa_2002.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');
