@@ -17,6 +17,17 @@
         return items.slice();
     }
 
+    /* The contributor's name is remembered in this browser for convenience. */
+    var NAME_KEY = 'wikiprev_contributor_name';
+
+    function savedName() {
+        try { return window.localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; }
+    }
+
+    function saveName(name) {
+        try { window.localStorage.setItem(NAME_KEY, name); } catch (e) { /* not essential */ }
+    }
+
     /* ---------- Helpers ---------- */
 
     function $(id) {
@@ -266,7 +277,7 @@
         event.preventDefault();
         var form = event.target;
         var input = {};
-        ['title', 'author', 'source', 'url', 'category', 'madeOn', 'dueDate', 'description']
+        ['contributor', 'title', 'author', 'source', 'url', 'category', 'madeOn', 'dueDate', 'description']
             .forEach(function (name) { input[name] = form.elements[name].value; });
 
         var submit = form.querySelector('.submit-btn');
@@ -286,7 +297,9 @@
 
         items.push(result.prediction);
         fillSuggestions();
+        saveName(input.contributor.trim());
         form.reset();
+        $('contributor').value = input.contributor.trim();
         showMessage(result.saved
             ? 'Previsione aggiunta.'
             : 'Previsione aggiunta, ma non è stato possibile salvarla in questo browser: andrà persa ricaricando la pagina.',
@@ -310,8 +323,15 @@
             return;
         }
         var id = btn.getAttribute('data-id');
+        var name = $('contributor').value.trim() || savedName();
+        if (!name) {
+            btn.classList.remove('confirming');
+            btn.replaceChildren(icon('fas fa-exclamation-triangle'), ' Scrivi prima il tuo nome nel modulo "Aggiungi una previsione"');
+            $('contributor').focus();
+            return;
+        }
         btn.disabled = true;
-        var result = await store.remove(id);
+        var result = await store.remove(id, name);
         if (!result.ok) {
             btn.disabled = false;
             btn.classList.remove('confirming');
@@ -339,7 +359,7 @@
     /* Suggest existing names while typing, so the same person or source is
      * always written the same way (important for statistics). */
     function fillSuggestions() {
-        [['author', 'people-list'], ['source', 'outlets-list']].forEach(function (pair) {
+        [['author', 'people-list'], ['source', 'outlets-list'], ['createdByName', 'contributors-list']].forEach(function (pair) {
             var names = {};
             items.forEach(function (p) { if (p[pair[0]]) names[p[pair[0]]] = true; });
             var list = $(pair[1]);
@@ -378,11 +398,10 @@
         $('predictions-grid').addEventListener('click', onDelete);
     }
 
-    /* ---------- Views: loading, error, sign-in, main ---------- */
+    /* ---------- Views: loading/error and main ---------- */
 
     function showView(name) {
         $('status-panel').hidden = name !== 'status';
-        $('auth-panel').hidden = name !== 'auth';
         $('app-content').hidden = name !== 'main';
     }
 
@@ -390,11 +409,6 @@
         $('status-text').textContent = text;
         $('status-panel').classList.toggle('error', Boolean(isError));
         showView('status');
-    }
-
-    function showUser(user) {
-        $('user-box').hidden = !user;
-        $('user-name').textContent = user ? user.name : '';
     }
 
     async function showMain() {
@@ -414,64 +428,10 @@
         showView('main');
     }
 
-    var currentUserId = null;
-
-    async function onUserChange(user) {
-        var id = user ? user.id : null;
-        if (id && id === currentUserId) return;   // same user, already loaded
-        currentUserId = id;
-        showUser(user);
-        if (user) {
-            await showMain();
-        } else {
-            items = [];
-            showView('auth');
-        }
-    }
-
-    function setupAuth() {
-        $('login-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            var email = $('login-email').value.trim();
-            var msg = $('login-message');
-            if (!email) {
-                msg.className = 'form-message error';
-                msg.textContent = 'Scrivi il tuo indirizzo email.';
-                return;
-            }
-            var button = e.target.querySelector('button');
-            button.disabled = true;
-            msg.className = 'form-message';
-            msg.textContent = 'Invio del link…';
-            var result = await store.signIn(email);
-            button.disabled = false;
-            msg.className = 'form-message ' + (result.ok ? 'success' : 'error');
-            msg.textContent = result.ok
-                ? 'Ti abbiamo mandato un link a ' + email + '. Aprilo da questo dispositivo per entrare.'
-                : result.error;
-        });
-        $('logout-btn').addEventListener('click', function () {
-            store.signOut();
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', async function () {
+    document.addEventListener('DOMContentLoaded', function () {
         setupMobileMenu();
         $('local-mode-banner').hidden = store.mode !== 'local';
-
-        if (store.mode === 'local') {
-            await showMain();
-            return;
-        }
-
-        setupAuth();
-        store.onAuthChange(onUserChange);
-        showStatus('Connessione al database…');
-        try {
-            var state = await store.init();
-            await onUserChange(state.user);
-        } catch (e) {
-            showStatus(e.message, true);
-        }
+        $('contributor').value = savedName();
+        showMain();
     });
 })();

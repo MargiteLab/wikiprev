@@ -19,10 +19,6 @@
                 <li><a href="#archive">Archivio</a></li>
                 <li><a href="#add">Aggiungi una previsione</a></li>
             </ul>
-            <div class="user-box" id="user-box" hidden>
-                <span id="user-name"></span>
-                <button type="button" id="logout-btn">Esci</button>
-            </div>
             <button class="mobile-menu-btn" aria-label="Apri il menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
@@ -42,19 +38,6 @@
 
         <section class="status-panel" id="status-panel" hidden>
             <p id="status-text">Caricamento…</p>
-        </section>
-
-        <section class="auth-panel" id="auth-panel" hidden>
-            <h2>Accedi a WikiPrev</h2>
-            <p>WikiPrev è riservato alle persone invitate. Scrivi il tuo indirizzo email: ti mandiamo un link per entrare, senza password.</p>
-            <form id="login-form" novalidate>
-                <label for="login-email">Email</label>
-                <div class="login-row">
-                    <input type="email" id="login-email" autocomplete="email" placeholder="nome@esempio.it" required>
-                    <button type="submit" class="submit-btn">Mandami il link</button>
-                </div>
-                <p class="form-message" id="login-message" role="status"></p>
-            </form>
         </section>
 
         <div id="app-content" hidden>
@@ -132,6 +115,13 @@
         <section class="add-prediction">
             <form id="prediction-form" novalidate>
                 <div class="form-group">
+                    <label for="contributor">Il tuo nome <span class="required">*</span></label>
+                    <input type="text" id="contributor" name="contributor" required maxlength="80"
+                           autocomplete="name" list="contributors-list" placeholder="Come vuoi comparire tra chi carica le previsioni">
+                    <p class="field-hint">Questo browser se lo ricorda. Usa sempre lo stesso nome, così le statistiche ti riconoscono.</p>
+                </div>
+
+                <div class="form-group">
                     <label for="title">Previsione <span class="required">*</span></label>
                     <input type="text" id="title" name="title" required maxlength="300"
                            placeholder="Es. Il nuovo stadio sarà completato entro giugno 2026">
@@ -186,6 +176,7 @@
             </form>
             <datalist id="people-list"></datalist>
             <datalist id="outlets-list"></datalist>
+            <datalist id="contributors-list"></datalist>
         </section>
         </div>
     </main>

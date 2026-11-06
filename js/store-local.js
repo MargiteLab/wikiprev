@@ -97,7 +97,8 @@
             madeOn: str(raw.madeOn),
             dueDate: str(raw.dueDate || raw.expiry),
             description: str(raw.description),
-            createdAt: str(raw.createdAt)
+            createdAt: str(raw.createdAt),
+            createdByName: str(raw.createdByName)
         };
         if (!p.title) return null;
         if (!CATEGORIES[p.category]) p.category = 'politics';
@@ -292,7 +293,8 @@
             madeOn: input.madeOn,
             dueDate: input.dueDate,
             description: input.description,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            createdByName: input.contributor
         });
         predictions.push(p);
         var saved = save();
@@ -317,13 +319,9 @@
 
     global.WikiPrevLocalStore = {
         mode: 'local',
-        init: function () { return resolved({ user: null }); },
         categories: function () { return resolved(CATEGORIES); },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },
         remove: function (id) { remove(id); return resolved({ ok: true }); },
-        signIn: function () { return resolved({ ok: false, error: 'Modalità locale: accesso non disponibile.' }); },
-        signOut: function () { return resolved(); },
-        onAuthChange: function () {}
     };
 })(window);

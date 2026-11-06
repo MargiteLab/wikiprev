@@ -3,10 +3,11 @@
 -- once outcomes/evaluations exist.
 
 -- Who uploads the most predictions.
-select coalesce(pr.display_name, '(esempi iniziali)') as caricata_da,
-       count(*)                                       as previsioni
+select coalesce(c.name, pr.display_name, '(esempi iniziali)') as caricata_da,
+       count(*)                                              as previsioni
 from predictions p
-left join profiles pr on pr.id = p.created_by
+left join contributors c on c.id = p.contributor_id
+left join profiles pr    on pr.id = p.created_by
 where p.deleted_at is null
 group by 1
 order by previsioni desc;

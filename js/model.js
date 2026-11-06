@@ -14,7 +14,7 @@
  *   dueDate:       string   date by which it can be checked, YYYY-MM-DD
  *   description:   string   details ("" if none)
  *   createdAt:     string   ISO timestamp of when it was added to WikiPrev
- *   createdByName: string   who added it ("" in local mode or for examples)
+ *   createdByName: string   name of who added it ("" for the bundled examples)
  * }
  */
 (function (global) {
@@ -49,6 +49,8 @@
     /* Returns a list of human-readable problems; empty list means valid. */
     function validate(input, categories) {
         var errors = [];
+        if (!str(input.contributor)) errors.push('Scrivi il tuo nome.');
+        else if (str(input.contributor).length > 80) errors.push('Il nome può avere al massimo 80 caratteri.');
         if (!str(input.title)) errors.push('Scrivi il testo della previsione.');
         else if (str(input.title).length > 300) errors.push('Il testo della previsione può avere al massimo 300 caratteri.');
         if (!str(input.source)) errors.push('Indica la fonte.');

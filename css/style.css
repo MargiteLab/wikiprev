@@ -575,32 +575,10 @@ footer {
     color: #c0392b;
 }
 
-/* ---- Sign-in, status and account ---- */
+/* ---- Status, contributor ---- */
 
 [hidden] {
     display: none !important;
-}
-
-.user-box {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin-left: auto;
-    margin-right: 1.5rem;
-    font-size: 0.95rem;
-}
-
-.user-box button {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    color: white;
-    border-radius: 6px;
-    padding: 0.3rem 0.8rem;
-    cursor: pointer;
-}
-
-.user-box button:hover {
-    border-color: white;
 }
 
 .local-mode-banner {
@@ -611,8 +589,7 @@ footer {
     margin-bottom: 2rem;
 }
 
-.status-panel,
-.auth-panel {
+.status-panel {
     background-color: white;
     border-radius: 12px;
     padding: 2rem;
@@ -623,37 +600,6 @@ footer {
 .status-panel.error {
     color: var(--accent-color);
     font-weight: 500;
-}
-
-.auth-panel h2 {
-    color: var(--primary-color);
-    margin-bottom: 0.8rem;
-}
-
-.auth-panel p {
-    margin-bottom: 1.2rem;
-    max-width: 60ch;
-}
-
-.auth-panel label {
-    display: block;
-    font-weight: 500;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.login-row {
-    display: flex;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-}
-
-.login-row input {
-    flex: 1 1 240px;
-    padding: 0.8rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
 }
 
 .added-by {
@@ -667,9 +613,9 @@ footer {
     cursor: wait;
 }
 
-@media (max-width: 768px) {
-    .user-box {
-        margin-right: 0.8rem;
-        font-size: 0.85rem;
-    }
+
+.field-hint {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 0.4rem;
 }

@@ -1,5 +1,7 @@
 /*
- * WikiPrev Supabase backend: shared data for signed-in members.
+ * WikiPrev Supabase backend: shared data, no sign-in. Visitors read the
+ * predictions and add or delete them by typing their name; writes go through
+ * the database functions submit_prediction and delete_prediction.
  * Database schema: supabase/migrations/. Same asynchronous interface as
  * store-local.js.
  */
@@ -9,8 +11,11 @@
     var model = global.WikiPrevModel;
 
     function create(config) {
-        var client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+        var client = global.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        });
         var categories = model.DEFAULT_CATEGORIES;
+        var categoriesLoaded = false;
 
         function toPrediction(row) {
             return {
@@ -30,51 +35,33 @@
 
         function describeError(error) {
             var msg = (error && error.message) || String(error);
-            if (/signups not allowed|user not found/i.test(msg)) {
-                return 'Questo indirizzo email non è tra quelli invitati. Chiedi a chi gestisce WikiPrev di invitarti.';
-            }
-            if (/rate limit|security purposes/i.test(msg)) {
-                return 'Hai chiesto troppi link in poco tempo. Riprova tra qualche minuto.';
-            }
-            if (/failed to fetch|network/i.test(msg)) {
-                return 'Impossibile contattare il database. Controlla la connessione e riprova.';
-            }
-            if (/JWT|not signed in|permission denied/i.test(msg)) {
-                return 'La sessione è scaduta. Esci e accedi di nuovo.';
-            }
+            // Messages written in Italian by the database functions are shown as they are.
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata)/.test(msg)) return msg;
+            if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
+            if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
+            if (/category_id_fkey/.test(msg)) return 'Categoria non valida.';
+            if (/failed to fetch|network/i.test(msg)) return 'Impossibile contattare il database. Controlla la connessione e riprova.';
             return 'Operazione non riuscita: ' + msg;
         }
 
-        async function loadUser(session) {
-            if (!session || !session.user) return null;
-            var res = await client.from('profiles').select('display_name').eq('id', session.user.id).maybeSingle();
-            return {
-                id: session.user.id,
-                email: session.user.email,
-                name: (res.data && res.data.display_name) || session.user.email
-            };
-        }
-
         async function loadCategories() {
+            if (categoriesLoaded) return;
             var res = await client.from('categories').select('id, label, icon, sort_order').order('sort_order');
-            if (res.error || !res.data || !res.data.length) return;
-            var map = {};
-            res.data.forEach(function (c) { map[c.id] = { label: c.label, icon: c.icon }; });
-            categories = map;
+            if (res.error) throw new Error(describeError(res.error));
+            if (res.data.length) {
+                var map = {};
+                res.data.forEach(function (c) { map[c.id] = { label: c.label, icon: c.icon }; });
+                categories = map;
+            }
+            categoriesLoaded = true;
         }
 
         return {
             mode: 'supabase',
 
-            init: async function () {
-                var res = await client.auth.getSession();
-                var user = await loadUser(res.data && res.data.session);
-                if (user) await loadCategories();
-                return { user: user };
-            },
-
-            categories: function () {
-                return Promise.resolve(categories);
+            categories: async function () {
+                await loadCategories();
+                return categories;
             },
 
             list: async function () {
@@ -86,7 +73,8 @@
             add: async function (input) {
                 var errors = model.validate(input, categories);
                 if (errors.length) return { ok: false, errors: errors };
-                var res = await client.rpc('add_prediction', {
+                var res = await client.rpc('submit_prediction', {
+                    p_contributor_name: model.str(input.contributor),
                     p_statement: model.str(input.title),
                     p_details: model.str(input.description),
                     p_person_name: model.str(input.author) || null,
@@ -102,41 +90,13 @@
                 return { ok: true, saved: true, prediction: toPrediction(row.data) };
             },
 
-            remove: async function (id) {
-                var res = await client.from('predictions')
-                    .update({ deleted_at: new Date().toISOString() })
-                    .eq('id', id);
-                if (res.error) return { ok: false, error: describeError(res.error) };
-                return { ok: true };
-            },
-
-            signIn: async function (email) {
-                var res = await client.auth.signInWithOtp({
-                    email: email,
-                    options: {
-                        shouldCreateUser: false,
-                        emailRedirectTo: global.location.href.split('#')[0]
-                    }
+            remove: async function (id, contributorName) {
+                var res = await client.rpc('delete_prediction', {
+                    p_id: id,
+                    p_contributor_name: model.str(contributorName)
                 });
                 if (res.error) return { ok: false, error: describeError(res.error) };
                 return { ok: true };
-            },
-
-            signOut: async function () {
-                await client.auth.signOut();
-            },
-
-            /* cb(user | null) whenever the user signs in or out. */
-            onAuthChange: function (cb) {
-                client.auth.onAuthStateChange(function (event, session) {
-                    if (event !== 'SIGNED_IN' && event !== 'SIGNED_OUT') return;
-                    // Supabase advises against awaiting its own calls inside this callback.
-                    setTimeout(async function () {
-                        var user = await loadUser(session);
-                        if (user) await loadCategories();
-                        cb(user);
-                    }, 0);
-                });
             }
         };
     }
