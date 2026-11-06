@@ -33,7 +33,65 @@
         science:    { label: 'Science',    icon: 'fa-flask' }
     };
 
-    var SEED = [
+    /* Example predictions shipped with the app, grouped by "seed version".
+     * A browser that already has saved data receives only the groups newer
+     * than the last one it saw, so deleted examples do not come back. */
+    var SEED_VERSION = 2;
+
+    // Real predictions found in the news (added November 2026).
+    var SEED_V2 = [
+        {
+            id: 'seed-v2-bankitalia-pil-2027',
+            title: 'Italian GDP will grow by 0.7% in 2027',
+            author: "Banca d'Italia",
+            source: 'Banca d\'Italia, Proiezioni macroeconomiche',
+            url: 'https://www.bancaditalia.it/pubblicazioni/proiezioni-macroeconomiche/2026/Proiezioni-macroeconomiche-Italia-ottobre-2026.pdf',
+            category: 'economics',
+            madeOn: '2026-10-16',
+            dueDate: '2028-03-31',
+            description: "In its October 2026 projections the Bank of Italy expects GDP growth of 0.9% in 2026, 0.7% in 2027 and 0.8% in 2028, with inflation at 2.4% in 2027. In an adverse scenario with much higher commodity prices, 2027 growth would be -0.3%. Check against Istat's annual GDP figure for 2027, usually published in March of the following year.",
+            createdAt: '2026-11-06T12:00:00.000Z'
+        },
+        {
+            id: 'seed-v2-artemis-iii-2027',
+            title: 'Artemis III will launch in summer 2027',
+            author: 'NASA',
+            source: 'News 6 ClickOrlando',
+            url: 'https://www.clickorlando.com/news/local/2026/10/23/artemis-iii-on-schedule-for-summer-2027-launch/',
+            category: 'science',
+            madeOn: '2026-10-23',
+            dueDate: '2027-09-30',
+            description: 'NASA leaders said the crewed Artemis III mission is still on schedule for a summer 2027 launch, while the crewed lunar landing is targeted for 2028.',
+            createdAt: '2026-11-06T12:01:00.000Z'
+        },
+        {
+            id: 'seed-v2-mobileye-robotaxi-2027',
+            title: 'Mobileye will launch its own robotaxi service in a U.S. city in 2027',
+            author: 'Mobileye',
+            source: 'CNBC',
+            url: 'https://www.cnbc.com/2026/06/16/self-driving-tech-supplier-mobileye-targets-us-robotaxi-launch-in-2027.html',
+            category: 'technology',
+            madeOn: '2026-06-16',
+            dueDate: '2027-12-31',
+            description: 'Mobileye plans to deploy an initial fleet of 100 vehicles in a major U.S. city during 2027, phasing the launch through the year, and aims for about 17,000 vehicles within five years.',
+            createdAt: '2026-11-06T12:02:00.000Z'
+        },
+        {
+            id: 'seed-v2-uk-inflation-peak-2027',
+            title: 'UK inflation will peak at about 4.4% around the start of 2027',
+            author: 'Economists surveyed by the Financial Times',
+            source: 'Investing.com (FT survey)',
+            url: 'https://investing.com/news/economy-news/uk-inflation-to-peak-at-44-around-start-of-2027-ft-survey-shows-5002287',
+            category: 'economics',
+            madeOn: '',
+            dueDate: '2027-04-30',
+            description: 'A Financial Times survey of economists expects British CPI inflation to peak at an average of 4.4% around the start of 2027, well above official forecasts. Check against the ONS monthly CPI releases for early 2027.',
+            createdAt: '2026-11-06T12:03:00.000Z'
+        }
+    ];
+
+    // Illustrative examples from the first version of the page.
+    var SEED_V1 = [
         {
             id: 'seed-1',
             title: 'Stock market will reach new highs by year end',
@@ -144,20 +202,35 @@
         }
     }
 
-    function load() {
-        var data = readStorage();
-        // Pre-v1 format: a bare array of predictions.
-        var list = Array.isArray(data) ? data : (data && Array.isArray(data.predictions) ? data.predictions : null);
-        if (!list) return SEED.map(normalize);
-        return list.map(normalize).filter(Boolean);
+    var SEED_GROUPS = { 1: SEED_V1, 2: SEED_V2 };
+
+    function seedsAfter(version) {
+        var out = [];
+        for (var v = version + 1; v <= SEED_VERSION; v++) out = out.concat(SEED_GROUPS[v] || []);
+        return out;
     }
 
-    var predictions = load();
+    function load() {
+        var data = readStorage();
+        // Pre-v1 format: a bare array of predictions (which already had the v1 examples).
+        var list = Array.isArray(data) ? data : (data && Array.isArray(data.predictions) ? data.predictions : null);
+        if (!list) return { list: seedsAfter(0).map(normalize), changed: false };
+        var seenSeeds = Array.isArray(data) ? 1 : (Number(data.seedVersion) || 1);
+        list = list.map(normalize).filter(Boolean);
+        var ids = {};
+        list.forEach(function (p) { ids[p.id] = true; });
+        var added = seedsAfter(seenSeeds).filter(function (p) { return !ids[p.id]; }).map(normalize);
+        return { list: list.concat(added), changed: seenSeeds < SEED_VERSION };
+    }
+
+    var loaded = load();
+    var predictions = loaded.list;
 
     function save() {
         try {
             global.localStorage.setItem(STORAGE_KEY, JSON.stringify({
                 version: SCHEMA_VERSION,
+                seedVersion: SEED_VERSION,
                 predictions: predictions
             }));
             return true;
@@ -206,6 +279,8 @@
         predictions = predictions.filter(function (p) { return p.id !== id; });
         if (predictions.length !== before) save();
     }
+
+    if (loaded.changed) save();
 
     function all() {
         return predictions.slice();
