@@ -310,6 +310,19 @@
         showMessage('Salvataggio…');
         var result;
         try {
+            if (input.category === NEW_CATEGORY) {
+                var created = await store.addCategory($('newCategory').value);
+                if (!created.ok) {
+                    submit.disabled = false;
+                    showMessage(created.error, 'error');
+                    return;
+                }
+                CATEGORIES = await store.categories();
+                fillCategorySelects();
+                $('category').value = created.id;
+                toggleNewCategory();
+                input.category = created.id;
+            }
             result = await store.add(input);
         } catch (e) {
             result = { ok: false, errors: [e.message] };
@@ -324,6 +337,7 @@
         fillSuggestions();
         saveName(input.contributor.trim());
         form.reset();
+        toggleNewCategory();
         $('contributor').value = input.contributor.trim();
         showMessage(result.saved
             ? 'Previsione aggiunta.'
@@ -371,15 +385,30 @@
 
     /* ---------- Setup ---------- */
 
+    var NEW_CATEGORY = '__new__';
+
     function fillCategorySelects() {
         ['filter-category', 'category'].forEach(function (selectId) {
             var select = $(selectId);
+            var current = select.value;
             // Keep the first, "empty" option and rebuild the rest.
             while (select.options.length > 1) select.remove(1);
             Object.keys(CATEGORIES).forEach(function (key) {
                 select.appendChild(el('option', { value: key, text: CATEGORIES[key].label }));
             });
+            if (selectId === 'category') {
+                select.appendChild(el('option', { value: NEW_CATEGORY, text: '+ Nuova categoria…' }));
+            }
+            select.value = current;
+            if (select.value !== current) select.value = '';
         });
+        toggleNewCategory();
+    }
+
+    function toggleNewCategory() {
+        var isNew = $('category').value === NEW_CATEGORY;
+        $('new-category-group').hidden = !isNew;
+        if (!isNew) $('newCategory').value = '';
     }
 
     /* Suggest existing names while typing, so the same person or source is
@@ -421,6 +450,10 @@
         filterForm.addEventListener('reset', function () { setTimeout(renderList, 0); });
 
         $('prediction-form').addEventListener('submit', onSubmit);
+        $('category').addEventListener('change', function () {
+            toggleNewCategory();
+            if (!$('new-category-group').hidden) $('newCategory').focus();
+        });
         $('predictions-grid').addEventListener('click', onDelete);
     }
 

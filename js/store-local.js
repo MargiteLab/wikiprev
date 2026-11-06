@@ -3,7 +3,8 @@
  * localStorage. Used when no Supabase project is configured (js/config.js),
  * e.g. for quick previews. Same asynchronous interface as store-supabase.js.
  *
- * Stored format: { version: 1, seedVersion: N, predictions: [...] }
+ * Stored format: { version: 1, seedVersion: N, predictions: [...],
+ *                 categories: { id: { label, icon } } }   (categories added here)
  */
 (function (global) {
     'use strict';
@@ -12,7 +13,8 @@
     var SCHEMA_VERSION = 1;
 
     var model = global.WikiPrevModel;
-    var CATEGORIES = model.DEFAULT_CATEGORIES;
+    var CATEGORIES = Object.assign({}, model.DEFAULT_CATEGORIES);
+    var customCategories = {};
     var str = model.str;
     var isValidDate = model.isValidDate;
     var isValidUrl = model.isValidUrl;
@@ -20,7 +22,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 6;
+    var SEED_VERSION = 7;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -232,7 +234,47 @@
         }
     ];
 
-    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5 };
+    // Torino-Lione railway (TAV) predictions (added November 2026).
+    var SEED_V7 = [
+        {
+            id: 'seed-v7-tav-inaugurazione-2015',
+            title: 'La linea Torino-Lione sarà inaugurata nel 2015',
+            author: '',
+            source: 'Il Fatto Quotidiano',
+            url: 'https://www.ilfattoquotidiano.it/2026/01/19/tav-torino-lione-costi-ritardi-notizie/8261752/',
+            category: 'tav',
+            madeOn: '',
+            dueDate: '2015-12-31',
+            description: "Secondo la relazione speciale 02/2026 della Corte dei conti europea, la stima iniziale prevedeva l'inaugurazione del collegamento nel 2015. Il calendario del 2020 indicava il 2030 e oggi la data prevista è il 2033: 18 anni di ritardo rispetto alla stima iniziale, con costi superiori del 127%.",
+            createdAt: '2026-11-06T15:00:00.000Z'
+        },
+        {
+            id: 'seed-v7-tav-talpa-chiomonte-2027',
+            title: 'La prima talpa del lato italiano inizierà a scavare a Chiomonte all\'inizio del 2027',
+            author: 'TELT',
+            source: "L'Indipendente",
+            url: 'https://www.lindipendente.online/2026/11/02/i-lavori-per-la-tav-torino-lione-sono-stati-ritardati-di-un-anno-ancora-una-volta/',
+            category: 'tav',
+            madeOn: '',
+            dueDate: '2027-03-31',
+            description: "Il programma prevedeva l'arrivo dalla Germania della prima fresa per il cantiere di Chiomonte entro la fine del 2026 e l'avvio dello scavo a inizio 2027. A novembre 2026 TELT ha spostato l'avvio all'inizio del 2028, attribuendo il ritardo alle proteste del 25 luglio.",
+            createdAt: '2026-11-06T15:01:00.000Z'
+        },
+        {
+            id: 'seed-v7-tav-servizio-2033',
+            title: 'La Torino-Lione entrerà in servizio commerciale il 31 dicembre 2033',
+            author: 'TELT',
+            source: 'Camera dei deputati, documentazione',
+            url: 'https://temi.camera.it/leg19/post/la-tratta-ferroviaria-torino-lione.html',
+            category: 'tav',
+            madeOn: '',
+            dueDate: '2033-12-31',
+            description: "Nel luglio 2024 il consiglio di amministrazione di TELT ha fissato al 31/12/2033 l'entrata in servizio commerciale della linea. Il cronoprogramma ufficiale del 2015 indicava la fine del 2029. In Francia il Conseil d'orientation des infrastructures ha ipotizzato uno slittamento al 2035.",
+            createdAt: '2026-11-06T15:02:00.000Z'
+        }
+    ];
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7 };
 
     function seedsAfter(version) {
         var out = [];
@@ -263,6 +305,20 @@
         return { list: list.concat(added), changed: seenSeeds < SEED_VERSION };
     }
 
+    function loadCustomCategories() {
+        var data = readStorage();
+        var stored = data && !Array.isArray(data) && data.categories;
+        if (!stored || typeof stored !== 'object') return;
+        Object.keys(stored).forEach(function (id) {
+            var c = stored[id];
+            if (/^[a-z][a-z0-9-]*$/.test(id) && c && str(c.label)) {
+                customCategories[id] = { label: str(c.label), icon: 'fa-tag' };
+                CATEGORIES[id] = customCategories[id];
+            }
+        });
+    }
+
+    loadCustomCategories();
     var loaded = load();
     var predictions = loaded.list;
 
@@ -271,7 +327,8 @@
             global.localStorage.setItem(STORAGE_KEY, JSON.stringify({
                 version: SCHEMA_VERSION,
                 seedVersion: SEED_VERSION,
-                predictions: predictions
+                predictions: predictions,
+                categories: customCategories
             }));
             return true;
         } catch (e) {
@@ -309,6 +366,21 @@
 
     if (loaded.changed) save();
 
+    function addCategory(label) {
+        var error = model.categoryLabelError(label);
+        if (error) return { ok: false, error: error };
+        var clean = str(label).replace(/\s+/g, ' ');
+        var existing = Object.keys(CATEGORIES).filter(function (id) {
+            return CATEGORIES[id].label.toLowerCase() === clean.toLowerCase();
+        })[0];
+        if (existing) return { ok: true, id: existing };
+        var id = model.categoryIdFor(clean, CATEGORIES);
+        customCategories[id] = { label: clean, icon: 'fa-tag' };
+        CATEGORIES[id] = customCategories[id];
+        save();
+        return { ok: true, id: id };
+    }
+
     function all() {
         return predictions.slice();
     }
@@ -321,7 +393,8 @@
         mode: 'local',
         needsAdminCode: false,
         checkAdminCode: function () { return resolved(true); },
-        categories: function () { return resolved(CATEGORIES); },
+        categories: function () { return resolved(Object.assign({}, CATEGORIES)); },
+        addCategory: function (label) { return resolved(addCategory(label)); },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },
         remove: function (id) { remove(id); return resolved({ ok: true }); },

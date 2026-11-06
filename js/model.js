@@ -26,7 +26,8 @@
         technology:     { label: 'Tecnologia',     icon: 'fa-microchip' },
         sports:         { label: 'Sport',          icon: 'fa-running' },
         science:        { label: 'Scienza',        icon: 'fa-flask' },
-        infrastructure: { label: 'Infrastrutture', icon: 'fa-road' }
+        infrastructure: { label: 'Infrastrutture', icon: 'fa-road' },
+        tav:            { label: 'TAV',            icon: 'fa-train' }
     };
 
     function str(value) {
@@ -44,6 +45,24 @@
         } catch (e) {
             return false;
         }
+    }
+
+    /* Category names: 2-40 characters, spaces collapsed. Returns an error or "". */
+    function categoryLabelError(label) {
+        var clean = str(label).replace(/\s+/g, ' ');
+        if (clean.length < 2 || clean.length > 40) return 'Il nome della categoria deve avere tra 2 e 40 caratteri.';
+        return '';
+    }
+
+    /* "Opere pubbliche" -> "opere-pubbliche". Same rule as add_category() in the database. */
+    function categoryIdFor(label, existing) {
+        var base = str(label).toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (!/^[a-z]/.test(base)) base = ('cat-' + base).replace(/-+$/, '');
+        var id = base, n = 1;
+        while (existing && existing[id]) { n += 1; id = base + '-' + n; }
+        return id;
     }
 
     /* Returns a list of human-readable problems; empty list means valid. */
@@ -69,6 +88,8 @@
         str: str,
         isValidDate: isValidDate,
         isValidUrl: isValidUrl,
+        categoryLabelError: categoryLabelError,
+        categoryIdFor: categoryIdFor,
         validate: validate
     };
 })(window);

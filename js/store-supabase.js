@@ -37,7 +37,7 @@
         function describeError(error) {
             var msg = (error && error.message) || String(error);
             // Messages written in Italian by the database functions are shown as they are.
-            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore)/.test(msg)) return msg;
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome della categoria)/.test(msg)) return msg;
             if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
             if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
             if (/category_id_fkey/.test(msg)) return 'Categoria non valida.';
@@ -63,7 +63,17 @@
 
             categories: async function () {
                 await loadCategories();
-                return categories;
+                return Object.assign({}, categories);
+            },
+
+            addCategory: async function (label) {
+                var error = model.categoryLabelError(label);
+                if (error) return { ok: false, error: error };
+                var res = await client.rpc('add_category', { p_label: model.str(label) });
+                if (res.error) return { ok: false, error: describeError(res.error) };
+                categoriesLoaded = false;   // reload, so the new one is included
+                await loadCategories();
+                return { ok: true, id: res.data };
             },
 
             list: async function () {

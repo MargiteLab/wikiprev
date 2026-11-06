@@ -9,6 +9,7 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Nessun accesso con email: per aggiungere una previsione basta scrivere il proprio nome
 - Per ogni previsione si sa chi l'ha caricata
 - Solo l'amministratore, con un codice segreto, può eliminare le previsioni
+- Nuove categorie si aggiungono direttamente dal modulo ("+ Nuova categoria…")
 
 ## Due modalità
 
@@ -42,7 +43,7 @@ Tabelle principali:
 | `profiles` | account con email (per ora non usati, pronti per un accesso futuro) |
 | `people` | chi fa le previsioni: persone, organizzazioni, gruppi |
 | `outlets` | dove sono state pubblicate (testate, siti, programmi) |
-| `categories` | le categorie |
+| `categories` | le categorie (si aggiungono anche dal sito; si rinominano o eliminano dal Table Editor) |
 | `predictions` | le previsioni, collegate a persona, fonte, categoria e utente |
 | `prediction_history` | ogni inserimento e modifica, con la riga completa |
 
@@ -63,6 +64,8 @@ Regole per non perdere dati:
    2. `0002_example_predictions.sql`
    3. `0003_open_access_with_names.sql`
    4. `0004_admin_only_delete.sql`
+   5. `0005_categories_tav_and_user_defined.sql`
+   6. `0006_tav_predictions.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');

@@ -23,7 +23,8 @@
             list: fail,
             add: fail,
             remove: fail,
-            checkAdminCode: fail
+            checkAdminCode: fail,
+            addCategory: fail
         };
     }
 })(window);
