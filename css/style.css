@@ -553,3 +553,8 @@ footer {
     color: var(--accent-color);
     font-weight: 600;
 }
+
+.tag.infrastructure {
+    background-color: #eceff1;
+    color: #455a64;
+}

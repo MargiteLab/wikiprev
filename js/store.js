@@ -30,13 +30,14 @@
         economics:  { label: 'Economics',  icon: 'fa-chart-line' },
         technology: { label: 'Technology', icon: 'fa-microchip' },
         sports:     { label: 'Sports',     icon: 'fa-running' },
-        science:    { label: 'Science',    icon: 'fa-flask' }
+        science:    { label: 'Science',    icon: 'fa-flask' },
+        infrastructure: { label: 'Infrastructure', icon: 'fa-road' }
     };
 
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 2;
+    var SEED_VERSION = 3;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -90,57 +91,6 @@
         }
     ];
 
-    // Illustrative examples from the first version of the page.
-    var SEED_V1 = [
-        {
-            id: 'seed-1',
-            title: 'Stock market will reach new highs by year end',
-            author: 'Financial analysts',
-            source: 'Financial Times',
-            url: '',
-            category: 'economics',
-            madeOn: '2023-06-15',
-            dueDate: '2023-12-31',
-            description: 'The stock market is set to grow despite geopolitical uncertainties, reaching new all-time highs by the end of the year.',
-            createdAt: '2023-06-20T10:00:00.000Z'
-        },
-        {
-            id: 'seed-2',
-            title: 'New government within a week',
-            author: 'Sources close to the negotiation',
-            source: 'Corriere della Sera',
-            url: '',
-            category: 'politics',
-            madeOn: '2023-11-08',
-            dueDate: '2023-11-15',
-            description: 'The government crisis will be resolved within 7 days with the formation of a national unity government.',
-            createdAt: '2023-11-08T09:00:00.000Z'
-        },
-        {
-            id: 'seed-3',
-            title: 'iPhone 15 will be revolutionary',
-            author: '',
-            source: 'TechCrunch',
-            url: '',
-            category: 'technology',
-            madeOn: '2023-05-02',
-            dueDate: '2023-09-30',
-            description: 'Apple is preparing innovative features for the next iPhone that will change the smartphone market, including a bezel-less display.',
-            createdAt: '2023-05-03T12:00:00.000Z'
-        },
-        {
-            id: 'seed-4',
-            title: 'Juventus will win the championship',
-            author: '',
-            source: 'La Gazzetta dello Sport',
-            url: '',
-            category: 'sports',
-            madeOn: '2022-11-20',
-            dueDate: '2023-05-31',
-            description: 'Despite a difficult start, the Turin team will recover and win the championship thanks to the return of some key injured players.',
-            createdAt: '2022-11-21T08:00:00.000Z'
-        }
-    ];
 
     function str(value) {
         return typeof value === 'string' ? value.trim() : '';
@@ -202,7 +152,65 @@
         }
     }
 
-    var SEED_GROUPS = { 1: SEED_V1, 2: SEED_V2 };
+
+    // Real Italian predictions (added November 2026).
+    var SEED_V3 = [
+        {
+            id: 'seed-v3-ponte-stretto-cantieri',
+            title: 'I cantieri del Ponte sullo Stretto apriranno entro il 2027',
+            author: 'Matteo Salvini, ministro delle Infrastrutture',
+            source: 'StrettoWeb',
+            url: 'https://www.strettoweb.com/2026/10/ponte-sullo-stretto-svolta-sui-tempi-salvini-cantieri-al-via-tra-il-2026-e-il-2027-lavori-conclusi-entro-il-2033/2156161/',
+            category: 'infrastructure',
+            madeOn: '',
+            dueDate: '2027-12-31',
+            description: "A ottobre 2026 Salvini ha indicato l'avvio dei cantieri tra la fine del 2026 e il 2027, con la fine dei lavori entro il 2033. In passato l'apertura era stata annunciata per l'estate 2024, poi per la fine del 2024 e quindi per il 2026.",
+            createdAt: '2026-11-06T13:00:00.000Z'
+        },
+        {
+            id: 'seed-v3-terzo-valico-scavi',
+            title: 'Gli scavi del Terzo Valico saranno completati entro la primavera 2027',
+            author: 'Edoardo Rixi, viceministro, e Calogero Mauceri, commissario straordinario',
+            source: 'ANSA',
+            url: 'https://www.ansa.it/lombardia/notizie/2026/09/14/terzo-valico-rixi-e-mauceri-entro-la-primavera-completati-gli-scavi_295161d8-8390-482c-96e9-96a6f6bd0805.html',
+            category: 'infrastructure',
+            madeOn: '2026-09-14',
+            dueDate: '2027-06-21',
+            description: "Il viceministro Rixi e il commissario Mauceri hanno indicato la primavera 2027 per la fine degli scavi della linea ad alta capacità Genova-Milano. Il completamento dell'intera linea è previsto circa un anno dopo.",
+            createdAt: '2026-11-06T13:01:00.000Z'
+        },
+        {
+            id: 'seed-v3-san-siro-cantieri-2027',
+            title: 'I lavori del nuovo stadio di San Siro inizieranno nel 2027',
+            author: 'Comune di Milano, Regione Lombardia, Inter e Milan',
+            source: 'Calcio e Finanza',
+            url: 'https://www.calcioefinanza.it/2026/10/08/san-siro-prossimi-passi-nuovo-stadio/',
+            category: 'sports',
+            madeOn: '2026-10-08',
+            dueDate: '2027-12-31',
+            description: "Comune e Regione puntano a chiudere le autorizzazioni nel 2027 per avviare i cantieri nella seconda metà dell'anno, con lo stadio pronto per gli Europei 2032. Alcune fonti indicano invece il 2028 per l'inizio dei lavori.",
+            createdAt: '2026-11-06T13:02:00.000Z'
+        },
+        {
+            id: 'seed-v3-disoccupazione-italia-2027',
+            title: 'La disoccupazione in Italia sarà al 5,7% nel 2027',
+            author: 'Commissione europea',
+            source: 'askanews',
+            url: 'https://askanews.it/2026/05/21/ue-migliora-stime-disoccupazione-italia-in-2026-57-a-minimo-record/',
+            category: 'economics',
+            madeOn: '2026-05-21',
+            dueDate: '2028-04-30',
+            description: "Nelle previsioni di primavera 2026 la Commissione europea stima per l'Italia un tasso di disoccupazione del 5,7% sia nel 2026 sia nel 2027, minimo storico, dopo il 6,1% del 2025. Da verificare con il dato medio annuo Istat del 2027.",
+            createdAt: '2026-11-06T13:03:00.000Z'
+        }
+    ];
+
+    // Ids of examples that were removed. Browsers that still have them drop
+    // them once when they upgrade (the first two are from the very first
+    // version of the page, which used numeric ids).
+    var RETIRED_SEED_IDS = { 3: ['1', '2', 'seed-1', 'seed-2', 'seed-3', 'seed-4'] };
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3 };
 
     function seedsAfter(version) {
         var out = [];
@@ -216,7 +224,11 @@
         var list = Array.isArray(data) ? data : (data && Array.isArray(data.predictions) ? data.predictions : null);
         if (!list) return { list: seedsAfter(0).map(normalize), changed: false };
         var seenSeeds = Array.isArray(data) ? 1 : (Number(data.seedVersion) || 1);
-        list = list.map(normalize).filter(Boolean);
+        var retired = {};
+        for (var v = seenSeeds + 1; v <= SEED_VERSION; v++) {
+            (RETIRED_SEED_IDS[v] || []).forEach(function (id) { retired[id] = true; });
+        }
+        list = list.map(normalize).filter(function (p) { return p && !retired[p.id]; });
         var ids = {};
         list.forEach(function (p) { ids[p.id] = true; });
         var added = seedsAfter(seenSeeds).filter(function (p) { return !ids[p.id]; }).map(normalize);
