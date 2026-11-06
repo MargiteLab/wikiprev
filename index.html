@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WikiPrev - Verifiable Forecast Archive</title>
+    <title>WikiPrev - Archivio di previsioni verificabili</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -15,11 +15,11 @@
                 <span>WikiPrev</span>
             </div>
             <ul class="nav-links">
-                <li><a href="#featured">Featured</a></li>
-                <li><a href="#archive">Archive</a></li>
-                <li><a href="#add">Add a prediction</a></li>
+                <li><a href="#featured">In evidenza</a></li>
+                <li><a href="#archive">Archivio</a></li>
+                <li><a href="#add">Aggiungi una previsione</a></li>
             </ul>
-            <button class="mobile-menu-btn" aria-label="Open menu" aria-expanded="false">
+            <button class="mobile-menu-btn" aria-label="Apri il menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
         </nav>
@@ -27,13 +27,13 @@
 
     <main class="container">
         <section class="hero">
-            <h1>WikiPrev - Verifiable Forecast Archive</h1>
-            <p>Track predictions, verify outcomes, and never forget to check what was promised</p>
+            <h1>WikiPrev - Archivio di previsioni verificabili</h1>
+            <p>Raccogli le previsioni, verifica come sono andate e non dimenticare mai di controllare cosa era stato promesso</p>
         </section>
 
         <div class="section-title" id="featured">
             <i class="fas fa-star"></i>
-            <h2>Featured Prediction</h2>
+            <h2>Previsione in evidenza</h2>
         </div>
 
         <section class="random-prediction" id="featured-prediction">
@@ -42,52 +42,52 @@
 
         <div class="section-title" id="archive">
             <i class="fas fa-filter"></i>
-            <h2>Filter Predictions</h2>
+            <h2>Filtra le previsioni</h2>
         </div>
 
         <section class="filters">
             <form class="filter-form" id="filter-form">
                 <div class="field">
-                    <label for="filter-text">Search</label>
-                    <input type="search" id="filter-text" placeholder="Title, author, source…">
+                    <label for="filter-text">Cerca</label>
+                    <input type="search" id="filter-text" placeholder="Titolo, autore, fonte…">
                 </div>
 
                 <div class="field">
-                    <label for="filter-category">Category</label>
+                    <label for="filter-category">Categoria</label>
                     <select id="filter-category">
-                        <option value="">All categories</option>
+                        <option value="">Tutte le categorie</option>
                     </select>
                 </div>
 
                 <div class="field">
-                    <label for="filter-from">Due from</label>
+                    <label for="filter-from">Scadenza dal</label>
                     <input type="date" id="filter-from">
                 </div>
 
                 <div class="field">
-                    <label for="filter-to">Due to</label>
+                    <label for="filter-to">Scadenza al</label>
                     <input type="date" id="filter-to">
                 </div>
 
                 <div class="field">
-                    <label for="filter-sort">Sort by</label>
+                    <label for="filter-sort">Ordina per</label>
                     <select id="filter-sort">
-                        <option value="recent">Most recently added</option>
-                        <option value="oldest">Oldest added</option>
-                        <option value="due-asc">Due date (soonest first)</option>
-                        <option value="due-desc">Due date (latest first)</option>
+                        <option value="recent">Aggiunte di recente</option>
+                        <option value="oldest">Aggiunte per prime</option>
+                        <option value="due-asc">Scadenza più vicina</option>
+                        <option value="due-desc">Scadenza più lontana</option>
                     </select>
                 </div>
 
                 <div class="actions">
-                    <button type="reset" class="secondary"><i class="fas fa-undo"></i> Reset</button>
+                    <button type="reset" class="secondary"><i class="fas fa-undo"></i> Azzera filtri</button>
                 </div>
             </form>
         </section>
 
         <div class="section-title">
             <i class="fas fa-archive"></i>
-            <h2>Predictions</h2>
+            <h2>Previsioni</h2>
         </div>
 
         <p class="results-count" id="results-count"></p>
@@ -98,62 +98,62 @@
 
         <div class="section-title" id="add">
             <i class="fas fa-plus-circle"></i>
-            <h2>Add a Prediction</h2>
+            <h2>Aggiungi una previsione</h2>
         </div>
 
         <section class="add-prediction">
             <form id="prediction-form" novalidate>
                 <div class="form-group">
-                    <label for="title">Prediction <span class="required">*</span></label>
+                    <label for="title">Previsione <span class="required">*</span></label>
                     <input type="text" id="title" name="title" required maxlength="200"
-                           placeholder="e.g. The new stadium will be completed by June 2026">
+                           placeholder="Es. Il nuovo stadio sarà completato entro giugno 2026">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="author">Who made it</label>
+                        <label for="author">Chi l'ha fatta</label>
                         <input type="text" id="author" name="author" maxlength="120"
-                               placeholder="Person or organization (optional)">
+                               placeholder="Persona o organizzazione (facoltativo)">
                     </div>
 
                     <div class="form-group">
-                        <label for="source">Source <span class="required">*</span></label>
+                        <label for="source">Fonte <span class="required">*</span></label>
                         <input type="text" id="source" name="source" required maxlength="120"
-                               placeholder="Newspaper, website, TV show…">
+                               placeholder="Giornale, sito, programma TV…">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="url">Source URL</label>
-                    <input type="url" id="url" name="url" placeholder="https://… (optional)">
+                    <label for="url">Link alla fonte</label>
+                    <input type="url" id="url" name="url" placeholder="https://… (facoltativo)">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="category">Category <span class="required">*</span></label>
+                        <label for="category">Categoria <span class="required">*</span></label>
                         <select id="category" name="category" required>
-                            <option value="">Select a category</option>
+                            <option value="">Scegli una categoria</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="madeOn">Date of the prediction</label>
+                        <label for="madeOn">Data della previsione</label>
                         <input type="date" id="madeOn" name="madeOn">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="dueDate">Due date for verification <span class="required">*</span></label>
+                    <label for="dueDate">Da verificare entro il <span class="required">*</span></label>
                     <input type="date" id="dueDate" name="dueDate" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="description">Description</label>
+                    <label for="description">Descrizione</label>
                     <textarea id="description" name="description" maxlength="2000"
-                              placeholder="Describe the prediction in detail"></textarea>
+                              placeholder="Descrivi la previsione nel dettaglio"></textarea>
                 </div>
 
-                <button type="submit" class="submit-btn"><i class="fas fa-plus"></i> Add Prediction</button>
+                <button type="submit" class="submit-btn"><i class="fas fa-plus"></i> Aggiungi previsione</button>
                 <p class="form-message" id="form-message" role="status"></p>
             </form>
         </section>
@@ -161,13 +161,13 @@
 
     <footer>
         <div class="footer-content">
-            <p>WikiPrev - Verifiable Forecast Archive</p>
+            <p>WikiPrev - Archivio di previsioni verificabili</p>
             <ul class="footer-links">
-                <li><a href="#featured">Featured</a></li>
-                <li><a href="#archive">Archive</a></li>
-                <li><a href="#add">Add a prediction</a></li>
+                <li><a href="#featured">In evidenza</a></li>
+                <li><a href="#archive">Archivio</a></li>
+                <li><a href="#add">Aggiungi una previsione</a></li>
             </ul>
-            <p>Open source under the GNU GPL v3</p>
+            <p>Software libero con licenza GNU GPL v3</p>
         </div>
     </footer>
 

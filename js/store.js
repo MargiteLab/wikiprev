@@ -26,67 +26,67 @@
     var SCHEMA_VERSION = 1;
 
     var CATEGORIES = {
-        politics:   { label: 'Politics',   icon: 'fa-landmark' },
-        economics:  { label: 'Economics',  icon: 'fa-chart-line' },
-        technology: { label: 'Technology', icon: 'fa-microchip' },
-        sports:     { label: 'Sports',     icon: 'fa-running' },
-        science:    { label: 'Science',    icon: 'fa-flask' },
-        infrastructure: { label: 'Infrastructure', icon: 'fa-road' }
+        politics:   { label: 'Politica',   icon: 'fa-landmark' },
+        economics:  { label: 'Economia',   icon: 'fa-chart-line' },
+        technology: { label: 'Tecnologia', icon: 'fa-microchip' },
+        sports:     { label: 'Sport',      icon: 'fa-running' },
+        science:    { label: 'Scienza',    icon: 'fa-flask' },
+        infrastructure: { label: 'Infrastrutture', icon: 'fa-road' }
     };
 
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 3;
+    var SEED_VERSION = 4;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
         {
             id: 'seed-v2-bankitalia-pil-2027',
-            title: 'Italian GDP will grow by 0.7% in 2027',
+            title: 'Il PIL italiano crescerà dello 0,7% nel 2027',
             author: "Banca d'Italia",
             source: 'Banca d\'Italia, Proiezioni macroeconomiche',
             url: 'https://www.bancaditalia.it/pubblicazioni/proiezioni-macroeconomiche/2026/Proiezioni-macroeconomiche-Italia-ottobre-2026.pdf',
             category: 'economics',
             madeOn: '2026-10-16',
             dueDate: '2028-03-31',
-            description: "In its October 2026 projections the Bank of Italy expects GDP growth of 0.9% in 2026, 0.7% in 2027 and 0.8% in 2028, with inflation at 2.4% in 2027. In an adverse scenario with much higher commodity prices, 2027 growth would be -0.3%. Check against Istat's annual GDP figure for 2027, usually published in March of the following year.",
+            description: "Nelle proiezioni di ottobre 2026 la Banca d'Italia prevede una crescita del PIL dello 0,9% nel 2026, dello 0,7% nel 2027 e dello 0,8% nel 2028, con l'inflazione al 2,4% nel 2027. In uno scenario avverso, con forti rincari delle materie prime, nel 2027 la crescita sarebbe del -0,3%. Da verificare con il dato annuale Istat sul PIL 2027, di solito pubblicato a marzo dell'anno successivo.",
             createdAt: '2026-11-06T12:00:00.000Z'
         },
         {
             id: 'seed-v2-artemis-iii-2027',
-            title: 'Artemis III will launch in summer 2027',
+            title: 'Artemis III partirà nell\'estate 2027',
             author: 'NASA',
             source: 'News 6 ClickOrlando',
             url: 'https://www.clickorlando.com/news/local/2026/10/23/artemis-iii-on-schedule-for-summer-2027-launch/',
             category: 'science',
             madeOn: '2026-10-23',
             dueDate: '2027-09-30',
-            description: 'NASA leaders said the crewed Artemis III mission is still on schedule for a summer 2027 launch, while the crewed lunar landing is targeted for 2028.',
+            description: 'I vertici della NASA hanno confermato che la missione con equipaggio Artemis III è ancora in programma per l\'estate 2027, mentre l\'allunaggio con equipaggio è previsto per il 2028.',
             createdAt: '2026-11-06T12:01:00.000Z'
         },
         {
             id: 'seed-v2-mobileye-robotaxi-2027',
-            title: 'Mobileye will launch its own robotaxi service in a U.S. city in 2027',
+            title: 'Mobileye lancerà un proprio servizio di robotaxi in una città degli Stati Uniti nel 2027',
             author: 'Mobileye',
             source: 'CNBC',
             url: 'https://www.cnbc.com/2026/06/16/self-driving-tech-supplier-mobileye-targets-us-robotaxi-launch-in-2027.html',
             category: 'technology',
             madeOn: '2026-06-16',
             dueDate: '2027-12-31',
-            description: 'Mobileye plans to deploy an initial fleet of 100 vehicles in a major U.S. city during 2027, phasing the launch through the year, and aims for about 17,000 vehicles within five years.',
+            description: 'Mobileye prevede di portare una prima flotta di 100 veicoli in una grande città statunitense nel corso del 2027, con un avvio graduale durante l\'anno, e punta a circa 17.000 veicoli entro cinque anni.',
             createdAt: '2026-11-06T12:02:00.000Z'
         },
         {
             id: 'seed-v2-uk-inflation-peak-2027',
-            title: 'UK inflation will peak at about 4.4% around the start of 2027',
-            author: 'Economists surveyed by the Financial Times',
-            source: 'Investing.com (FT survey)',
+            title: 'L\'inflazione nel Regno Unito toccherà il picco di circa il 4,4% a inizio 2027',
+            author: 'Economisti intervistati dal Financial Times',
+            source: 'Investing.com (sondaggio FT)',
             url: 'https://investing.com/news/economy-news/uk-inflation-to-peak-at-44-around-start-of-2027-ft-survey-shows-5002287',
             category: 'economics',
             madeOn: '',
             dueDate: '2027-04-30',
-            description: 'A Financial Times survey of economists expects British CPI inflation to peak at an average of 4.4% around the start of 2027, well above official forecasts. Check against the ONS monthly CPI releases for early 2027.',
+            description: 'Secondo un sondaggio del Financial Times tra gli economisti, l\'inflazione britannica raggiungerà un picco medio del 4,4% verso l\'inizio del 2027, ben sopra le previsioni ufficiali. Da verificare con i dati mensili ONS sui prezzi al consumo di inizio 2027.',
             createdAt: '2026-11-06T12:03:00.000Z'
         }
     ];
@@ -229,6 +229,12 @@
             (RETIRED_SEED_IDS[v] || []).forEach(function (id) { retired[id] = true; });
         }
         list = list.map(normalize).filter(function (p) { return p && !retired[p.id]; });
+        // Examples whose text changed (e.g. translated) are refreshed once.
+        if (seenSeeds < SEED_VERSION) {
+            var current = {};
+            seedsAfter(0).forEach(function (p) { current[p.id] = p; });
+            list = list.map(function (p) { return current[p.id] ? normalize(current[p.id]) : p; });
+        }
         var ids = {};
         list.forEach(function (p) { ids[p.id] = true; });
         var added = seedsAfter(seenSeeds).filter(function (p) { return !ids[p.id]; }).map(normalize);
@@ -254,14 +260,14 @@
     /* Returns a list of human-readable problems; empty list means valid. */
     function validate(input) {
         var errors = [];
-        if (!str(input.title)) errors.push('The prediction text is required.');
-        if (!str(input.source)) errors.push('The source is required.');
-        if (!CATEGORIES[str(input.category)]) errors.push('Please choose a category.');
-        if (!isValidDate(str(input.dueDate))) errors.push('A valid due date is required.');
-        if (str(input.url) && !isValidUrl(str(input.url))) errors.push('The source URL must start with http:// or https://.');
-        if (str(input.madeOn) && !isValidDate(str(input.madeOn))) errors.push('The date of the prediction is not valid.');
+        if (!str(input.title)) errors.push('Scrivi il testo della previsione.');
+        if (!str(input.source)) errors.push('Indica la fonte.');
+        if (!CATEGORIES[str(input.category)]) errors.push('Scegli una categoria.');
+        if (!isValidDate(str(input.dueDate))) errors.push('Indica una data valida entro cui verificarla.');
+        if (str(input.url) && !isValidUrl(str(input.url))) errors.push('Il link alla fonte deve iniziare con http:// o https://.');
+        if (str(input.madeOn) && !isValidDate(str(input.madeOn))) errors.push('La data della previsione non è valida.');
         if (isValidDate(str(input.madeOn)) && isValidDate(str(input.dueDate)) && str(input.madeOn) > str(input.dueDate)) {
-            errors.push('The due date cannot be earlier than the date of the prediction.');
+            errors.push('La data di verifica non può essere precedente alla data della previsione.');
         }
         return errors;
     }

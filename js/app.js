@@ -58,11 +58,11 @@
     function metaTags(p) {
         var cat = categoryOf(p);
         return el('div', { className: 'prediction-meta' }, [
-            el('span', { className: 'tag', title: 'Due date for verification' }, [
-                icon('far fa-calendar'), ' Due: ' + formatDate(p.dueDate)
+            el('span', { className: 'tag', title: 'Da verificare entro il' }, [
+                icon('far fa-calendar'), ' Scadenza: ' + formatDate(p.dueDate)
             ]),
-            p.madeOn ? el('span', { className: 'tag', title: 'Date the prediction was made' }, [
-                icon('far fa-clock'), ' Made: ' + formatDate(p.madeOn)
+            p.madeOn ? el('span', { className: 'tag', title: 'Data della previsione' }, [
+                icon('far fa-clock'), ' Fatta il: ' + formatDate(p.madeOn)
             ]) : null,
             el('span', { className: 'tag ' + p.category }, [
                 icon('fas ' + cat.icon), ' ' + cat.label
@@ -85,18 +85,18 @@
         box.replaceChildren();
         if (!p) {
             featuredId = null;
-            box.appendChild(el('p', { text: 'No predictions yet. Add the first one below!' }));
+            box.appendChild(el('p', { text: 'Ancora nessuna previsione. Aggiungi la prima qui sotto!' }));
             return;
         }
         featuredId = p.id;
         [
             el('h3', { text: p.title }),
             p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
-            el('p', { className: 'source' }, ['Source: ', sourceNode(p)]),
+            el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
             metaTags(p),
             p.description ? el('p', { text: p.description }) : null,
             el('button', { type: 'button', className: 'view-all', id: 'shuffle-featured' }, [
-                icon('fas fa-random'), ' Show another'
+                icon('fas fa-random'), " Mostrane un'altra"
             ])
         ].forEach(function (node) { if (node) box.appendChild(node); });
         $('shuffle-featured').addEventListener('click', function () {
@@ -153,7 +153,7 @@
             el('div', { className: 'card-content' }, [
                 el('h3', { text: p.title }),
                 p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
-                el('p', { className: 'source' }, ['Source: ', sourceNode(p)]),
+                el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
                 metaTags(p),
                 el('p', { text: p.description || '' }),
                 el('div', { className: 'card-actions' }, [
@@ -162,9 +162,9 @@
                         type: 'button',
                         className: 'delete-btn',
                         'data-id': p.id,
-                        'aria-label': 'Delete prediction',
-                        title: 'Delete'
-                    }, [icon('fas fa-trash-alt'), ' Delete'])
+                        'aria-label': 'Elimina la previsione',
+                        title: 'Elimina'
+                    }, [icon('fas fa-trash-alt'), ' Elimina'])
                 ])
             ])
         ]);
@@ -179,15 +179,15 @@
         if (!list.length) {
             grid.appendChild(el('p', {
                 className: 'empty-state',
-                text: all.length ? 'No predictions match these filters.' : 'No predictions yet.'
+                text: all.length ? 'Nessuna previsione corrisponde ai filtri.' : 'Ancora nessuna previsione.'
             }));
         } else {
             list.forEach(function (p) { grid.appendChild(card(p)); });
         }
 
         $('results-count').textContent = list.length === all.length
-            ? all.length + (all.length === 1 ? ' prediction' : ' predictions')
-            : 'Showing ' + list.length + ' of ' + all.length + ' predictions';
+            ? all.length + (all.length === 1 ? ' previsione' : ' previsioni')
+            : list.length + ' di ' + all.length + ' previsioni';
     }
 
     /* ---------- Add form ---------- */
@@ -217,8 +217,8 @@
 
         form.reset();
         showMessage(result.saved
-            ? 'Prediction added.'
-            : 'Prediction added, but it could not be saved in this browser and will be lost on reload.',
+            ? 'Previsione aggiunta.'
+            : 'Previsione aggiunta, ma non è stato possibile salvarla in questo browser: andrà persa ricaricando la pagina.',
             result.saved ? 'success' : 'error');
         renderList();
         if (!featuredId) renderFeatured(result.prediction);
@@ -230,11 +230,11 @@
         // Two-step delete: the first click asks for confirmation on the button itself.
         if (!btn.classList.contains('confirming')) {
             btn.classList.add('confirming');
-            btn.replaceChildren(icon('fas fa-trash-alt'), ' Click again to delete');
+            btn.replaceChildren(icon('fas fa-trash-alt'), ' Clicca di nuovo per eliminare');
             setTimeout(function () {
                 if (!btn.isConnected) return;
                 btn.classList.remove('confirming');
-                btn.replaceChildren(icon('fas fa-trash-alt'), ' Delete');
+                btn.replaceChildren(icon('fas fa-trash-alt'), ' Elimina');
             }, 4000);
             return;
         }
