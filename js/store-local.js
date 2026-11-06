@@ -319,6 +319,8 @@
 
     global.WikiPrevLocalStore = {
         mode: 'local',
+        needsAdminCode: false,
+        checkAdminCode: function () { return resolved(true); },
         categories: function () { return resolved(CATEGORIES); },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },

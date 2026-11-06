@@ -6,8 +6,9 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Aggiunta di previsioni con autore, fonte, link, categoria, data della previsione e scadenza
 - Ricerca, filtro per categoria e per intervallo di scadenza, ordinamento
 - In evidenza la previsione con la scadenza più vicina, con priorità a quelle appena scadute
-- Nessun accesso con email: per aggiungere o eliminare basta scrivere il proprio nome
-- Per ogni previsione si sa chi l'ha caricata (e chi l'ha eliminata)
+- Nessun accesso con email: per aggiungere una previsione basta scrivere il proprio nome
+- Per ogni previsione si sa chi l'ha caricata
+- Solo l'amministratore, con un codice segreto, può eliminare le previsioni
 
 ## Due modalità
 
@@ -48,11 +49,11 @@ Tabelle principali:
 Regole per non perdere dati:
 - **Le migrazioni non si modificano.** Una volta applicata, una migrazione resta com'è. Ogni cambiamento alla struttura va in un nuovo file numerato (`0003_...sql`).
 - **Si aggiunge invece di rinominare.** Meglio aggiungere colonne o tabelle che rinominarle o eliminarle.
-- **Il sito non cancella niente.** Una previsione eliminata viene solo nascosta (`deleted_at`, con il nome di chi l'ha eliminata), e `prediction_history` conserva ogni versione.
+- **Il sito non cancella niente.** Una previsione eliminata viene solo nascosta (`deleted_at`), e `prediction_history` conserva ogni versione.
 - **Nomi unici.** Persone, fonti e chi carica, con lo stesso nome anche scritto con maiuscole diverse, sono la stessa riga. Questo rende affidabili le statistiche.
-- **Scritture controllate.** I visitatori possono solo leggere le tabelle; aggiungono ed eliminano passando dalle funzioni `submit_prediction` e `delete_prediction`, che controllano i dati.
+- **Scritture controllate.** I visitatori possono solo leggere le tabelle. Aggiungono passando dalla funzione `submit_prediction`, che controlla i dati. Eliminare (`delete_prediction`) richiede il codice amministratore, salvato nel database solo in forma cifrata.
 
-**Attenzione:** senza accesso, chiunque conosca l'indirizzo del sito può aggiungere ed eliminare previsioni, e può scrivere un nome non suo. Un'eliminazione si annulla dal **Table Editor** svuotando `deleted_at` della previsione.
+**Attenzione:** senza accesso, chiunque conosca l'indirizzo del sito può aggiungere previsioni e può scrivere un nome non suo. Un'eliminazione si annulla dal **Table Editor** svuotando `deleted_at` della previsione.
 
 ## Configurare Supabase (una volta sola)
 
@@ -61,7 +62,13 @@ Regole per non perdere dati:
    1. `0001_initial_schema.sql`
    2. `0002_example_predictions.sql`
    3. `0003_open_access_with_names.sql`
-3. Collega il sito. In **Project Settings → API** copia *Project URL* e la chiave *anon public* in `js/config.js`. Sono dati pubblici per natura: permettono solo ciò che il database consente ai visitatori.
+   4. `0004_admin_only_delete.sql`
+3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
+   ```sql
+   select public.set_admin_code('il-tuo-codice-segreto');
+   ```
+   Poi sul sito apri **Amministrazione** (in fondo alla pagina) e inseriscilo: il tuo browser lo ricorderà e ti mostrerà i pulsanti "Elimina". Per cambiarlo, riesegui lo stesso comando con un codice nuovo. Non salvarlo nel repository.
+4. Collega il sito. In **Project Settings → API** copia *Project URL* e la chiave *anon public* in `js/config.js`. Sono dati pubblici per natura: permettono solo ciò che il database consente ai visitatori.
 
 ## Pubblicare il sito
 

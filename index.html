@@ -178,6 +178,25 @@
             <datalist id="outlets-list"></datalist>
             <datalist id="contributors-list"></datalist>
         </section>
+
+        <section class="admin-panel" id="admin-panel" hidden>
+            <h2><i class="fas fa-user-shield"></i> Amministrazione</h2>
+            <form id="admin-form" novalidate>
+                <div id="admin-login">
+                    <p>Inserisci il codice amministratore per poter eliminare le previsioni. Questo browser lo ricorderà.</p>
+                    <label for="admin-code">Codice amministratore</label>
+                    <div class="admin-row">
+                        <input type="password" id="admin-code" autocomplete="current-password">
+                        <button type="submit" class="submit-btn">Entra</button>
+                    </div>
+                    <p class="form-message" id="admin-message" role="status"></p>
+                </div>
+            </form>
+            <div id="admin-active" hidden>
+                <p>Sei l'amministratore: su ogni previsione compare il pulsante "Elimina".</p>
+                <button type="button" id="admin-logout" class="secondary-btn">Esci dalla modalità amministratore</button>
+            </div>
+        </section>
         </div>
     </main>
 
@@ -188,6 +207,7 @@
                 <li><a href="#featured">In evidenza</a></li>
                 <li><a href="#archive">Archivio</a></li>
                 <li><a href="#add">Aggiungi una previsione</a></li>
+                <li id="admin-link-item" hidden><a href="#admin-panel" id="admin-link">Amministrazione</a></li>
             </ul>
             <p>Software libero con licenza GNU GPL v3</p>
         </div>

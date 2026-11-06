@@ -22,7 +22,8 @@
             categories: fail,
             list: fail,
             add: fail,
-            remove: fail
+            remove: fail,
+            checkAdminCode: fail
         };
     }
 })(window);

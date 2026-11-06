@@ -1,7 +1,8 @@
 /*
  * WikiPrev Supabase backend: shared data, no sign-in. Visitors read the
- * predictions and add or delete them by typing their name; writes go through
- * the database functions submit_prediction and delete_prediction.
+ * predictions and add them by typing their name; additions go through
+ * the database function submit_prediction. Only the administrator, recognised
+ * by a secret code, can delete (delete_prediction).
  * Database schema: supabase/migrations/. Same asynchronous interface as
  * store-local.js.
  */
@@ -36,7 +37,7 @@
         function describeError(error) {
             var msg = (error && error.message) || String(error);
             // Messages written in Italian by the database functions are shown as they are.
-            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata)/.test(msg)) return msg;
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore)/.test(msg)) return msg;
             if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
             if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
             if (/category_id_fkey/.test(msg)) return 'Categoria non valida.';
@@ -58,6 +59,7 @@
 
         return {
             mode: 'supabase',
+            needsAdminCode: true,
 
             categories: async function () {
                 await loadCategories();
@@ -90,13 +92,18 @@
                 return { ok: true, saved: true, prediction: toPrediction(row.data) };
             },
 
-            remove: async function (id, contributorName) {
-                var res = await client.rpc('delete_prediction', {
-                    p_id: id,
-                    p_contributor_name: model.str(contributorName)
-                });
-                if (res.error) return { ok: false, error: describeError(res.error) };
+            remove: async function (id, adminCode) {
+                var res = await client.rpc('delete_prediction', { p_id: id, p_admin_code: adminCode || '' });
+                if (res.error) {
+                    return { ok: false, error: describeError(res.error), notAdmin: res.error.code === '42501' };
+                }
                 return { ok: true };
+            },
+
+            checkAdminCode: async function (code) {
+                var res = await client.rpc('is_admin_code', { p_code: code || '' });
+                if (res.error) throw new Error(describeError(res.error));
+                return res.data === true;
             }
         };
     }

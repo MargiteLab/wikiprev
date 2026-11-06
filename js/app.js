@@ -28,6 +28,31 @@
         try { window.localStorage.setItem(NAME_KEY, name); } catch (e) { /* not essential */ }
     }
 
+    /* Administrator code (shared mode only), remembered in this browser. */
+    var ADMIN_KEY = 'wikiprev_admin_code';
+    var isAdmin = false;
+
+    function savedAdminCode() {
+        try { return window.localStorage.getItem(ADMIN_KEY) || ''; } catch (e) { return ''; }
+    }
+
+    function saveAdminCode(code) {
+        try {
+            if (code) window.localStorage.setItem(ADMIN_KEY, code);
+            else window.localStorage.removeItem(ADMIN_KEY);
+        } catch (e) { /* the code then lasts until the page is closed */ }
+    }
+
+    var sessionAdminCode = '';   // fallback when localStorage is unavailable
+
+    function adminCode() {
+        return savedAdminCode() || sessionAdminCode;
+    }
+
+    function canDelete() {
+        return !store.needsAdminCode || isAdmin;
+    }
+
     /* ---------- Helpers ---------- */
 
     function $(id) {
@@ -229,13 +254,13 @@
                     p.createdByName
                         ? el('span', { className: 'added-by' }, [icon('fas fa-user-edit'), ' Caricata da ' + p.createdByName])
                         : el('span'),
-                    el('button', {
+                    canDelete() ? el('button', {
                         type: 'button',
                         className: 'delete-btn',
                         'data-id': p.id,
                         'aria-label': 'Elimina la previsione',
                         title: 'Elimina'
-                    }, [icon('fas fa-trash-alt'), ' Elimina'])
+                    }, [icon('fas fa-trash-alt'), ' Elimina']) : null
                 ])
             ])
         ]);
@@ -323,15 +348,16 @@
             return;
         }
         var id = btn.getAttribute('data-id');
-        var name = $('contributor').value.trim() || savedName();
-        if (!name) {
-            btn.classList.remove('confirming');
-            btn.replaceChildren(icon('fas fa-exclamation-triangle'), ' Scrivi prima il tuo nome nel modulo "Aggiungi una previsione"');
-            $('contributor').focus();
+        btn.disabled = true;
+        var result = await store.remove(id, adminCode());
+        if (!result.ok && result.notAdmin) {
+            // The saved code is no longer valid (e.g. it was changed).
+            setAdmin(false);
+            $('admin-panel').hidden = false;
+            $('admin-message').className = 'form-message error';
+            $('admin-message').textContent = 'Il codice salvato non è più valido. Inseriscilo di nuovo.';
             return;
         }
-        btn.disabled = true;
-        var result = await store.remove(id, name);
         if (!result.ok) {
             btn.disabled = false;
             btn.classList.remove('confirming');
@@ -398,6 +424,76 @@
         $('predictions-grid').addEventListener('click', onDelete);
     }
 
+    /* ---------- Administrator ---------- */
+
+    function setAdmin(value, code) {
+        isAdmin = value;
+        if (value) {
+            sessionAdminCode = code || adminCode();
+            if (code) saveAdminCode(code);
+        } else {
+            sessionAdminCode = '';
+            saveAdminCode('');
+        }
+        renderAdminPanel();
+        if (started) renderList();
+    }
+
+    function renderAdminPanel() {
+        $('admin-login').hidden = isAdmin;
+        $('admin-active').hidden = !isAdmin;
+    }
+
+    function setupAdmin() {
+        if (!store.needsAdminCode) return;
+        $('admin-link-item').hidden = false;
+        $('admin-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            $('admin-panel').hidden = false;
+            renderAdminPanel();
+            $('admin-panel').scrollIntoView({ behavior: 'smooth' });
+        });
+        $('admin-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            var code = $('admin-code').value;
+            var msg = $('admin-message');
+            msg.className = 'form-message';
+            msg.textContent = 'Verifica…';
+            var ok = false;
+            try {
+                ok = await store.checkAdminCode(code);
+            } catch (err) {
+                msg.className = 'form-message error';
+                msg.textContent = err.message;
+                return;
+            }
+            if (!ok) {
+                msg.className = 'form-message error';
+                msg.textContent = 'Codice non valido.';
+                return;
+            }
+            $('admin-code').value = '';
+            msg.textContent = '';
+            setAdmin(true, code);
+        });
+        $('admin-logout').addEventListener('click', function () {
+            setAdmin(false);
+        });
+    }
+
+    async function restoreAdmin() {
+        if (!store.needsAdminCode || !savedAdminCode()) return;
+        try {
+            if (await store.checkAdminCode(savedAdminCode())) {
+                isAdmin = true;
+                $('admin-panel').hidden = false;
+                renderAdminPanel();
+            } else {
+                saveAdminCode('');
+            }
+        } catch (e) { /* keep the code; try again on next visit */ }
+    }
+
     /* ---------- Views: loading/error and main ---------- */
 
     function showView(name) {
@@ -420,6 +516,7 @@
             showStatus(e.message, true);
             return;
         }
+        await restoreAdmin();
         fillCategorySelects();
         fillSuggestions();
         setupMainView();
@@ -432,6 +529,7 @@
         setupMobileMenu();
         $('local-mode-banner').hidden = store.mode !== 'local';
         $('contributor').value = savedName();
+        setupAdmin();
         showMain();
     });
 })();
