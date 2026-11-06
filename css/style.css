@@ -574,3 +574,102 @@ footer {
     background-color: #fdedec;
     color: #c0392b;
 }
+
+/* ---- Sign-in, status and account ---- */
+
+[hidden] {
+    display: none !important;
+}
+
+.user-box {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-left: auto;
+    margin-right: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.user-box button {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+}
+
+.user-box button:hover {
+    border-color: white;
+}
+
+.local-mode-banner {
+    background-color: #fef9e7;
+    color: #7d6608;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 2rem;
+}
+
+.status-panel,
+.auth-panel {
+    background-color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2.5rem;
+}
+
+.status-panel.error {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.auth-panel h2 {
+    color: var(--primary-color);
+    margin-bottom: 0.8rem;
+}
+
+.auth-panel p {
+    margin-bottom: 1.2rem;
+    max-width: 60ch;
+}
+
+.auth-panel label {
+    display: block;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.login-row {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+}
+
+.login-row input {
+    flex: 1 1 240px;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.added-by {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.submit-btn:disabled,
+.delete-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+@media (max-width: 768px) {
+    .user-box {
+        margin-right: 0.8rem;
+        font-size: 0.85rem;
+    }
+}

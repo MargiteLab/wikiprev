@@ -19,6 +19,10 @@
                 <li><a href="#archive">Archivio</a></li>
                 <li><a href="#add">Aggiungi una previsione</a></li>
             </ul>
+            <div class="user-box" id="user-box" hidden>
+                <span id="user-name"></span>
+                <button type="button" id="logout-btn">Esci</button>
+            </div>
             <button class="mobile-menu-btn" aria-label="Apri il menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
@@ -30,6 +34,30 @@
             <h1>WikiPrev - Archivio di previsioni verificabili</h1>
             <p>Raccogli le previsioni, verifica come sono andate e non dimenticare mai di controllare cosa era stato promesso</p>
         </section>
+
+        <p class="local-mode-banner" id="local-mode-banner" hidden>
+            <i class="fas fa-info-circle"></i>
+            Modalità locale: le previsioni restano solo in questo browser e nessun altro le vede.
+        </p>
+
+        <section class="status-panel" id="status-panel" hidden>
+            <p id="status-text">Caricamento…</p>
+        </section>
+
+        <section class="auth-panel" id="auth-panel" hidden>
+            <h2>Accedi a WikiPrev</h2>
+            <p>WikiPrev è riservato alle persone invitate. Scrivi il tuo indirizzo email: ti mandiamo un link per entrare, senza password.</p>
+            <form id="login-form" novalidate>
+                <label for="login-email">Email</label>
+                <div class="login-row">
+                    <input type="email" id="login-email" autocomplete="email" placeholder="nome@esempio.it" required>
+                    <button type="submit" class="submit-btn">Mandami il link</button>
+                </div>
+                <p class="form-message" id="login-message" role="status"></p>
+            </form>
+        </section>
+
+        <div id="app-content" hidden>
 
         <div class="section-title" id="featured">
             <i class="fas fa-star"></i>
@@ -105,20 +133,20 @@
             <form id="prediction-form" novalidate>
                 <div class="form-group">
                     <label for="title">Previsione <span class="required">*</span></label>
-                    <input type="text" id="title" name="title" required maxlength="200"
+                    <input type="text" id="title" name="title" required maxlength="300"
                            placeholder="Es. Il nuovo stadio sarà completato entro giugno 2026">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="author">Chi l'ha fatta</label>
-                        <input type="text" id="author" name="author" maxlength="120"
+                        <input type="text" id="author" name="author" maxlength="160" list="people-list"
                                placeholder="Persona o organizzazione (facoltativo)">
                     </div>
 
                     <div class="form-group">
                         <label for="source">Fonte <span class="required">*</span></label>
-                        <input type="text" id="source" name="source" required maxlength="120"
+                        <input type="text" id="source" name="source" required maxlength="160" list="outlets-list"
                                placeholder="Giornale, sito, programma TV…">
                     </div>
                 </div>
@@ -156,7 +184,10 @@
                 <button type="submit" class="submit-btn"><i class="fas fa-plus"></i> Aggiungi previsione</button>
                 <p class="form-message" id="form-message" role="status"></p>
             </form>
+            <datalist id="people-list"></datalist>
+            <datalist id="outlets-list"></datalist>
         </section>
+        </div>
     </main>
 
     <footer>
@@ -171,6 +202,11 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/model.js"></script>
+    <script src="js/store-local.js"></script>
+    <script src="js/store-supabase.js"></script>
     <script src="js/store.js"></script>
     <script src="js/app.js"></script>
 </body>
