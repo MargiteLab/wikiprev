@@ -12,6 +12,7 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Nuove categorie si aggiungono direttamente dal modulo ("+ Nuova categoria…")
 - Oltre alla categoria, ogni previsione può avere più etichette (es. "Promesse politiche"), selezionabili insieme; nuove etichette si creano dal modulo
 - Ogni previsione mostra quando è stata inserita e da chi
+- Contatore delle visite, visibile all'amministratore nel riquadro Amministrazione (senza cookie, senza IP)
 
 ## Due modalità
 
@@ -73,6 +74,7 @@ Regole per non perdere dati:
    8. `0008_tav_la_stampa_2002_link.sql`
    9. `0009_tags.sql`
    10. `0010_wrong_predictions_2021_2024.sql`
+   11. `0011_visit_counter.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');
@@ -91,6 +93,14 @@ Per provarlo in locale:
 ```bash
 python3 -m http.server 8000
 ```
+
+## Visite al sito
+
+Ogni apertura della pagina registra nel database: data e ora, un numero casuale
+che il browser conserva solo finché la scheda resta aperta, il sito di provenienza
+(per esempio `t.me` o `www.google.com`) e il tipo di dispositivo. Nessun indirizzo IP,
+nessun cookie, nessun identificativo permanente. Le statistiche degli ultimi 30 giorni
+si vedono nel riquadro **Amministrazione**, dopo aver inserito il codice.
 
 ## Statistiche
 

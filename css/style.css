@@ -738,3 +738,65 @@ footer {
     padding: 0;
     margin: 0;
 }
+
+/* ---- Visit statistics (administrator) ---- */
+
+.visit-stats {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e9ee;
+}
+
+.visit-stats h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.small-btn {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.visit-totals {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.visit-totals div {
+    display: flex;
+    flex-direction: column;
+}
+
+.visit-totals strong {
+    font-size: 2rem;
+    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.visit-totals span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.visit-table {
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    min-width: 260px;
+}
+
+.visit-table th,
+.visit-table td {
+    padding: 0.35rem 0.8rem;
+    border-bottom: 1px solid #eef1f4;
+    text-align: left;
+}
+
+.visit-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

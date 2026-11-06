@@ -41,7 +41,7 @@
         function describeError(error) {
             var msg = (error && error.message) || String(error);
             // Messages written in Italian by the database functions are shown as they are.
-            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome della categoria|Il nome di un'etichetta|Puoi indicare al massimo)/.test(msg)) return msg;
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome della categoria|Il nome di un'etichetta|Puoi indicare al massimo|Solo l'amministratore può vedere)/.test(msg)) return msg;
             if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
             if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
             if (/category_id_fkey/.test(msg)) return 'Categoria non valida.';
@@ -130,6 +130,28 @@
                     return { ok: false, error: describeError(res.error), notAdmin: res.error.code === '42501' };
                 }
                 return { ok: true };
+            },
+
+            /* Never fails: a visit that cannot be recorded is simply not counted. */
+            logVisit: async function (sessionId, referrerHost, device) {
+                try {
+                    await client.rpc('log_visit', {
+                        p_session_id: sessionId,
+                        p_referrer_host: referrerHost || null,
+                        p_device: device
+                    });
+                } catch (e) { /* ignore */ }
+            },
+
+            visitStats: async function (adminCode, days) {
+                var res = await client.rpc('visit_stats', { p_admin_code: adminCode || '', p_days: days || 30 });
+                if (res.error) {
+                    if (/PGRST202|Could not find the function/i.test(res.error.code + ' ' + res.error.message)) {
+                        throw new Error('Il contatore delle visite non è ancora attivo: esegui la migrazione 0011 nel SQL Editor di Supabase.');
+                    }
+                    throw new Error(describeError(res.error));
+                }
+                return res.data;
             },
 
             checkAdminCode: async function (code) {

@@ -556,6 +556,7 @@
     function renderAdminPanel() {
         $('admin-login').hidden = isAdmin;
         $('admin-active').hidden = !isAdmin;
+        renderVisitStats();
     }
 
     function setupAdmin() {
@@ -593,6 +594,7 @@
         $('admin-logout').addEventListener('click', function () {
             setAdmin(false);
         });
+        $('visit-stats-refresh').addEventListener('click', renderVisitStats);
     }
 
     async function restoreAdmin() {
@@ -606,6 +608,83 @@
                 saveAdminCode('');
             }
         } catch (e) { /* keep the code; try again on next visit */ }
+    }
+
+    /* ---------- Visits ---------- */
+
+    /* Random id kept only while this tab is open (sessionStorage): it counts
+     * visits without following anyone over time. */
+    function sessionId() {
+        var key = 'wikiprev_session';
+        try {
+            var id = window.sessionStorage.getItem(key);
+            if (id) return id;
+        } catch (e) { /* fall through */ }
+        var id2 = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+            : 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, function () { return (Math.random() * 16 | 0).toString(16); });
+        try { window.sessionStorage.setItem(key, id2); } catch (e) { /* not essential */ }
+        return id2;
+    }
+
+    function referrerHost() {
+        try {
+            if (!document.referrer) return '';
+            var host = new URL(document.referrer).hostname;
+            return host === window.location.hostname ? '' : host;
+        } catch (e) { return ''; }
+    }
+
+    function deviceType() {
+        var w = window.innerWidth || 0;
+        var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        if (w < 600) return 'mobile';
+        if (coarse && w < 1100) return 'tablet';
+        return 'desktop';
+    }
+
+    function logVisit() {
+        store.logVisit(sessionId(), referrerHost(), deviceType());
+    }
+
+    var DEVICE_LABELS = { mobile: 'Telefono', tablet: 'Tablet', desktop: 'Computer', other: 'Altro' };
+
+    async function renderVisitStats() {
+        var box = $('visit-stats');
+        if (store.mode !== 'supabase' || !isAdmin) { box.hidden = true; return; }
+        box.hidden = false;
+        var body = $('visit-stats-body');
+        body.replaceChildren(el('p', { text: 'Caricamento…' }));
+        var stats;
+        try {
+            stats = await store.visitStats(adminCode(), 30);
+        } catch (e) {
+            body.replaceChildren(el('p', { className: 'form-message error', text: e.message }));
+            return;
+        }
+        var devices = Object.keys(stats.devices || {}).map(function (k) {
+            return (DEVICE_LABELS[k] || k) + ' ' + stats.devices[k];
+        }).join(' · ') || '—';
+        var rows = (stats.days || []).slice(0, 14).map(function (d) {
+            return el('tr', null, [
+                el('td', { text: formatDate(d.day) }),
+                el('td', { className: 'num', text: String(d.visits) }),
+                el('td', { className: 'num', text: String(d.page_views) })
+            ]);
+        });
+        body.replaceChildren(
+            el('div', { className: 'visit-totals' }, [
+                el('div', null, [el('strong', { text: String(stats.visits) }), el('span', { text: 'visite' })]),
+                el('div', null, [el('strong', { text: String(stats.page_views) }), el('span', { text: 'pagine viste' })])
+            ]),
+            el('p', { className: 'field-hint', text: 'Dal ' + formatDate(stats.from) + ' a oggi. Una visita è una scheda del browser aperta sul sito.' }),
+            el('p', null, [el('strong', { text: 'Provenienza: ' }),
+                (stats.sources || []).map(function (s) { return s.source + ' ' + s.visits; }).join(' · ') || '—']),
+            el('p', null, [el('strong', { text: 'Dispositivi: ' }), devices]),
+            rows.length ? el('table', { className: 'visit-table' }, [
+                el('thead', null, el('tr', null, [el('th', { text: 'Giorno' }), el('th', { className: 'num', text: 'Visite' }), el('th', { className: 'num', text: 'Pagine' })])),
+                el('tbody', null, rows)
+            ]) : el('p', { text: 'Nessuna visita registrata finora.' })
+        );
     }
 
     /* ---------- Views: loading/error and main ---------- */
@@ -650,5 +729,6 @@
         $('contributor').value = savedName();
         setupAdmin();
         showMain();
+        logVisit();
     });
 })();

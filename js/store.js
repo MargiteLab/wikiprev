@@ -26,7 +26,8 @@
             checkAdminCode: fail,
             addCategory: fail,
             tags: fail,
-            supportsTags: function () { return false; }
+            supportsTags: function () { return false; },
+            logVisit: function () { return Promise.resolve(); }
         };
     }
 })(window);

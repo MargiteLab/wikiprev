@@ -587,6 +587,7 @@
         addCategory: function (label) { return resolved(addCategory(label)); },
         tags: function () { return resolved(Object.assign({}, TAGS)); },
         supportsTags: function () { return true; },
+        logVisit: function () { return resolved(); },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },
         remove: function (id) { remove(id); return resolved({ ok: true }); },
