@@ -548,3 +548,8 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+.delete-btn.confirming {
+    color: var(--accent-color);
+    font-weight: 600;
+}

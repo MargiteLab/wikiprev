@@ -227,7 +227,17 @@
     function onDelete(event) {
         var btn = event.target.closest('.delete-btn');
         if (!btn) return;
-        if (!window.confirm('Delete this prediction?')) return;
+        // Two-step delete: the first click asks for confirmation on the button itself.
+        if (!btn.classList.contains('confirming')) {
+            btn.classList.add('confirming');
+            btn.replaceChildren(icon('fas fa-trash-alt'), ' Click again to delete');
+            setTimeout(function () {
+                if (!btn.isConnected) return;
+                btn.classList.remove('confirming');
+                btn.replaceChildren(icon('fas fa-trash-alt'), ' Delete');
+            }, 4000);
+            return;
+        }
         var id = btn.getAttribute('data-id');
         store.remove(id);
         renderList();
