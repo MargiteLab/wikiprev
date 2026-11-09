@@ -26,7 +26,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 12;
+    var SEED_VERSION = 13;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -99,7 +99,10 @@
             seen[t.id] = true;
             return true;
         }).map(function (t) {
-            return { id: t.id, label: str(t.label), icon: str(t.icon) || (TAGS[t.id] && TAGS[t.id].icon) || 'fa-hashtag' };
+            var tag = { id: t.id, label: str(t.label), icon: str(t.icon) || (TAGS[t.id] && TAGS[t.id].icon) || 'fa-hashtag' };
+            // Tags used by examples or saved predictions also appear in filters and the form.
+            if (!TAGS[tag.id]) TAGS[tag.id] = { label: tag.label, icon: tag.icon };
+            return tag;
         });
     }
 
@@ -472,7 +475,71 @@
         }
     ];
 
-    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11, 12: SEED_V12 };
+    // Clearly wrong predictions from the last 30 years (added November 2026).
+    var SEED_V13 = [
+        {
+            id: 'seed-v13-krugman-internet-fax-2005',
+            tags: [{ id: 'economia', label: 'Economia' }, { id: 'tecnologia', label: 'Tecnologia' }],
+            title: "Entro il 2005 sarà chiaro che Internet non ha avuto sull'economia un impatto maggiore del fax",
+            author: 'Paul Krugman',
+            source: 'Red Herring',
+            url: 'https://quoteinvestigator.com/2023/10/26/internet-fax/',
+            madeOn: '1998-06-10',
+            dueDate: '2005-12-31',
+            description: "Nell'articolo «Why most economists' predictions are wrong» (Red Herring, giugno 1998) l'economista, poi premio Nobel, scrisse: «By 2005 or so, it will become clear that the Internet's impact on the economy has been no greater than the fax machine's». Com'è andata: nel 2005 il commercio elettronico, i motori di ricerca e la pubblicità online erano già settori da decine di miliardi. Nel 2013 Krugman ha detto che il pezzo voleva essere «divertente e provocatorio», non una previsione accurata. Il link porta alla ricostruzione della citazione su Quote Investigator.",
+            createdAt: '2026-11-09T16:00:00.000Z'
+        },
+        {
+            id: 'seed-v13-dow-36000-2004',
+            tags: [{ id: 'economia', label: 'Economia' }, { id: 'mercati', label: 'Mercati' }],
+            title: 'Il Dow Jones arriverà a 36.000 punti entro tre-cinque anni',
+            author: 'James Glassman e Kevin Hassett',
+            source: 'Dow 36,000 (libro, 1999)',
+            url: 'https://en.wikipedia.org/wiki/Dow_36,000',
+            madeOn: '',
+            dueDate: '2004-12-31',
+            description: "Nel libro «Dow 36,000», uscito nel 1999 con l'indice intorno agli 11.000 punti, i due autori sostenevano che le azioni erano sottovalutate e che il Dow Jones avrebbe toccato 36.000 punti in tre-cinque anni. Com'è andata: dopo lo scoppio della bolla delle dot-com il Dow è sceso sotto gli 8.000 punti nel 2002; ha chiuso per la prima volta sopra 36.000 solo il 2 novembre 2021, 22 anni dopo. Nel 2010 gli autori hanno riconosciuto di aver perso una scommessa sulla previsione.",
+            createdAt: '2026-11-09T16:01:00.000Z'
+        },
+        {
+            id: 'seed-v13-gates-spam-2006',
+            tags: [{ id: 'tecnologia', label: 'Tecnologia' }],
+            title: 'Fra due anni il problema dello spam sarà risolto',
+            author: 'Bill Gates',
+            source: 'The Register',
+            url: 'https://www.theregister.com/2004/01/26/well_kill_spam_in_two/',
+            madeOn: '2004-01-23',
+            dueDate: '2006-01-31',
+            description: "Al World Economic Forum di Davos, a gennaio 2004, il fondatore di Microsoft disse: «Two years from now, spam will be solved», puntando su sistemi di identificazione dei mittenti e su un piccolo costo per ogni email inviata. Com'è andata: nel 2007 si stima che siano state inviate circa 10.800 miliardi di email di spam, più di quelle legittime; i filtri sono migliorati negli anni successivi, ma lo spam non è mai scomparso.",
+            createdAt: '2026-11-09T16:02:00.000Z'
+        },
+        {
+            id: 'seed-v13-alitalia-utile-2017',
+            tags: [{ id: 'economia', label: 'Economia' }, { id: 'trasporti', label: 'Trasporti' }],
+            title: 'Alitalia tornerà in utile nel 2017',
+            author: 'Luca Cordero di Montezemolo',
+            source: 'Sky TG24',
+            url: 'https://tg24.sky.it/economia/2015/01/20/alitalia_presentazione_nuova_societ__ethiad_montezemolo_hogan_cassano',
+            madeOn: '2015-01-20',
+            dueDate: '2017-12-31',
+            description: "Presentando la nuova Alitalia nata dall'ingresso di Etihad, il presidente Montezemolo indicò il 2017 come anno del ritorno all'utile; l'amministratore delegato Silvano Cassano parlò di circa 100 milioni di euro. Il piano di Etihad del 2014 prevedeva 108 milioni di utile nel 2017. Com'è andata: il 2 maggio 2017 Alitalia ha chiesto l'amministrazione straordinaria, con perdite stimate di centinaia di milioni.",
+            createdAt: '2026-11-09T16:03:00.000Z'
+        },
+        {
+            id: 'seed-v13-musk-milione-robotaxi-2020',
+            tags: [{ id: 'tecnologia', label: 'Tecnologia' }],
+            title: "L'anno prossimo ci saranno più di un milione di robotaxi Tesla in strada",
+            author: 'Elon Musk',
+            source: 'TechCrunch',
+            url: 'https://techcrunch.com/2019/04/22/tesla-plans-to-launch-a-robotaxi-network-in-2020/',
+            madeOn: '2019-04-22',
+            dueDate: '2020-12-31',
+            description: "All'«Autonomy Day» di Tesla, il 22 aprile 2019, Musk disse: «next year for sure, we'll have over a million robotaxis on the road», spiegando che sarebbe bastato un aggiornamento software delle auto già vendute. Com'è andata: nel 2020 non c'era nessun robotaxi Tesla in servizio; nel 2022 Musk spostava l'obiettivo a una produzione in volume nel 2024 (vedi la previsione relativa).",
+            createdAt: '2026-11-09T16:04:00.000Z'
+        }
+    ];
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11, 12: SEED_V12, 13: SEED_V13 };
 
     function seedsAfter(version) {
         var out = [];
