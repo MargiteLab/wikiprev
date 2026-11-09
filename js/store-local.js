@@ -130,7 +130,12 @@
             description: str(raw.description),
             createdAt: str(raw.createdAt),
             createdByName: str(raw.createdByName),
-            tags: normalizeTags(raw.tags)
+            tags: normalizeTags(raw.tags),
+            outcomeLinks: (Array.isArray(raw.outcomeLinks) ? raw.outcomeLinks : []).filter(function (l) {
+                return l && isValidUrl(str(l.url));
+            }).map(function (l) {
+                return { id: str(l.id) || newId(), url: str(l.url), note: str(l.note), addedBy: str(l.addedBy), createdAt: str(l.createdAt) };
+            })
         };
         if (!p.title) return null;
         var fromCategory = str(raw.category) && tagForCategory(str(raw.category));
@@ -661,6 +666,25 @@
         if (predictions.length !== before) save();
     }
 
+    function addOutcomeLink(predictionId, input) {
+        var p = predictions.filter(function (x) { return x.id === predictionId; })[0];
+        if (!p) return { ok: false, errors: ['Previsione non trovata o già eliminata.'] };
+        var errors = model.validateOutcomeLink(input, p);
+        if (errors.length) return { ok: false, errors: errors };
+        p.outcomeLinks = (p.outcomeLinks || []).concat([{
+            id: newId(), url: str(input.url), note: str(input.note),
+            addedBy: str(input.contributor), createdAt: new Date().toISOString()
+        }]);
+        return { ok: true, prediction: p, saved: save() };
+    }
+
+    function removeOutcomeLink(predictionId, linkId) {
+        predictions.forEach(function (p) {
+            if (p.id === predictionId) p.outcomeLinks = (p.outcomeLinks || []).filter(function (l) { return l.id !== linkId; });
+        });
+        save();
+    }
+
     if (loaded.changed) save();
 
     /* Find a tag by name ignoring case, creating it if needed. */
@@ -692,6 +716,8 @@
         logVisit: function () { return resolved(); },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },
-        remove: function (id) { remove(id); return resolved({ ok: true }); }
+        remove: function (id) { remove(id); return resolved({ ok: true }); },
+        addOutcomeLink: function (id, input) { return resolved(addOutcomeLink(id, input)); },
+        removeOutcomeLink: function (id, linkId) { removeOutcomeLink(id, linkId); return resolved({ ok: true }); }
     };
 })(window);

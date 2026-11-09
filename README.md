@@ -12,6 +12,7 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Solo l'amministratore, con un codice segreto, può eliminare le previsioni
 - Tag: ogni previsione ne ha almeno uno e può averne più di uno (es. "Economia", "TAV", "Promesse politiche"); nuovi tag si creano dal modulo. Fino a novembre 2026 c'erano "categorie" separate: sono diventate tag (migrazione 0013)
 - Ogni previsione mostra quando è stata inserita e da chi
+- **Com'è andata:** chiunque può allegare a una previsione uno o più link a notizie che mostrano com'è andata, con una breve nota facoltativa e il proprio nome, di solito dopo la scadenza ma anche prima, se l'esito è già noto. Solo link, nessun giudizio: chi legge valuta dalle fonti. Solo l'amministratore può togliere un link (migrazione 0017)
 - Contatore delle visite, visibile all'amministratore nel riquadro Amministrazione (senza cookie, senza IP)
 
 ## Due modalità
@@ -80,6 +81,7 @@ Regole per non perdere dati:
    14. `0014_tag_aliases_ai.sql`
    15. `0015_wrong_predictions_1998_2020.sql`
    16. `0016_putin_resignation_rumour_2021.sql`
+   17. `0017_outcome_links.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');

@@ -15,6 +15,8 @@
  *   createdAt:     string   ISO timestamp of when it was added to WikiPrev
  *   createdByName: string   name of who added it ("" for the bundled examples)
  *   tags:          array    [{ id, label, icon }], at least one
+ *   outcomeLinks:  array    links to news showing how it went, oldest first:
+ *                           [{ id, url, note, addedBy, createdAt }]
  * }
  *
  * Until November 2026 a prediction also had a single "category"; categories
@@ -99,7 +101,24 @@
         return errors;
     }
 
+    var MAX_NOTE = 300;
+
+    /* Checks a "Com'è andata" link before it is saved. */
+    function validateOutcomeLink(input, prediction) {
+        var errors = [];
+        if (!str(input.contributor)) errors.push('Scrivi il tuo nome.');
+        else if (str(input.contributor).length > 80) errors.push('Il nome può avere al massimo 80 caratteri.');
+        if (!isValidUrl(str(input.url))) errors.push('Il link deve iniziare con http:// o https://.');
+        if (str(input.note).length > MAX_NOTE) errors.push('La nota può avere al massimo ' + MAX_NOTE + ' caratteri.');
+        if (prediction && (prediction.outcomeLinks || []).some(function (l) {
+            return l.url.toLowerCase() === str(input.url).toLowerCase();
+        })) errors.push('Questo link è già stato aggiunto.');
+        return errors;
+    }
+
     global.WikiPrevModel = {
+        MAX_NOTE: MAX_NOTE,
+        validateOutcomeLink: validateOutcomeLink,
         LEGACY_CATEGORY_TAGS: LEGACY_CATEGORY_TAGS,
         DEFAULT_TAGS: DEFAULT_TAGS,
         MAX_TAGS: MAX_TAGS,
