@@ -25,7 +25,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 11;
+    var SEED_VERSION = 12;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -435,7 +435,28 @@
         }
     ];
 
-    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11 };
+    // Bank of Italy, Economic Bulletin 4/2026 (added November 2026).
+    var SEED_V12 = [
+        {
+            id: 'seed-v12-bdi-hyperscaler-rendimenti',
+            tags: [
+                { id: 'intelligenza-artificiale', label: 'Intelligenza artificiale' },
+                { id: 'mercati', label: 'Mercati' },
+                { id: 'tecnologia', label: 'Tecnologia' }
+            ],
+            title: "Le emissioni di obbligazioni delle big tech per l'IA potrebbero far salire ancora i rendimenti dei titoli di Stato a lunga scadenza",
+            author: "Banca d'Italia",
+            source: "Banca d'Italia, Bollettino economico",
+            url: 'https://www.bancaditalia.it/pubblicazioni/bollettino-economico/2026-4/boleco-4-2026.pdf',
+            category: 'economics',
+            madeOn: '2026-10-16',
+            dueDate: '2028-12-31',
+            description: "Nel Bollettino economico 4/2026 (riquadro «Il recente rialzo dei rendimenti dei titoli pubblici a lunga scadenza», p. 12) la Banca d'Italia osserva che nei primi otto mesi del 2026 le obbligazioni in dollari delle imprese statunitensi sono cresciute del 47%, trainate dalle «hyperscalers» che costruiscono le infrastrutture dell'IA, e scrive: «In prospettiva, le cospicue emissioni di titoli privati, soprattutto sulle scadenze più lunghe, potrebbero accrescere la concorrenza con gli emittenti pubblici nei segmenti a maggiore durata, alimentando ulteriori pressioni al rialzo sui rendimenti dei titoli». Nello stesso riquadro ricorda che rendimenti più elevati aumentano gli oneri del debito pubblico. Da verificare con l'andamento dei rendimenti decennali (Stati Uniti, Germania, Italia) nel 2027-2028.",
+            createdAt: '2026-11-09T10:00:00.000Z'
+        }
+    ];
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11, 12: SEED_V12 };
 
     function seedsAfter(version) {
         var out = [];
