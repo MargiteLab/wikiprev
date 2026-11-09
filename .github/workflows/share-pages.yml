@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PAGES_BRANCH: claude/epic-faraday-z2rslk   # the branch GitHub Pages publishes
+  PAGES_BRANCH: main   # the branch GitHub Pages publishes
 
 jobs:
   build:

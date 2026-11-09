@@ -87,7 +87,7 @@ Regole per non perdere dati:
 ## Pubblicare il sito
 
 Il sito è statico, quindi qualunque hosting statico va bene:
-- **GitHub Pages:** Settings → Pages → Deploy from a branch. È gratuito per i repository pubblici.
+- **GitHub Pages:** Settings → Pages → Deploy from a branch, branch `main`, cartella `/ (root)`. È gratuito per i repository pubblici.
 - **Netlify** o **Cloudflare Pages:** gratuiti anche con un repository privato.
 
 Quando si modificano CSS o JavaScript, aggiornare il numero di versione `?v=...` nei
