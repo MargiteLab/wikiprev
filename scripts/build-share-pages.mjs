@@ -31,7 +31,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'https://margitelab.github.io/wikiprev/';
 const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png?v=3';
 const OUT_DIR = join(ROOT, 'p');
-const IMAGE_TEMPLATE_VERSION = 3;   // bump to redraw every image
+const IMAGE_TEMPLATE_VERSION = 4;   // bump to redraw every image
 
 function readConfig() {
     const text = readFileSync(join(ROOT, 'js', 'config.js'), 'utf8');
@@ -135,9 +135,9 @@ ${assets()}
 body { width: 1200px; height: 630px; overflow: hidden; position: relative;
   background: #f4ede2; color: #1f1b16;
   font-family: 'Source Serif 4', 'DejaVu Serif', Georgia, serif; }
-.art { position: absolute; right: 0; top: 0; width: 444px; height: 630px; background-size: cover; }
+.art { position: absolute; right: 0; top: 0; width: 320px; height: 630px; background-size: cover; }
 .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; background: #c4432b; }
-.content { position: absolute; left: 64px; top: 44px; bottom: 56px; width: 730px;
+.content { position: absolute; left: 64px; top: 44px; bottom: 56px; width: 820px;
   display: flex; flex-direction: column; gap: 22px; }
 .brand { display: flex; align-items: baseline; gap: 18px; padding-bottom: 16px; border-bottom: 2px solid #1f1b16; }
 .logo { font-family: 'Libre Caslon Text', Georgia, serif; font-weight: 700; font-size: 44px; letter-spacing: 1px; }
