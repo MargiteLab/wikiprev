@@ -89,14 +89,6 @@
             ' alle ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
 
-    /* "Caricata da Mario il 06/11/2026 alle 18:05" (or without the name). */
-    function insertedNode(p) {
-        var when = formatInserted(p.createdAt);
-        if (!when && !p.createdByName) return el('span');
-        var text = (p.createdByName ? 'Caricata da ' + p.createdByName : 'Inserita') + (when ? ' il ' + when : '');
-        return el('span', { className: 'added-by', title: 'Inserimento in Wikiprev' }, [icon('fas fa-user-edit'), ' ' + text]);
-    }
-
     function formatDate(iso) {
         if (!iso) return '—';
         var parts = iso.split('-');
@@ -142,17 +134,6 @@
         ]);
     }
 
-    function metaTags(p) {
-        return el('div', { className: 'prediction-meta' }, [
-            el('span', { className: 'tag', title: 'Da verificare entro il' }, [
-                icon('far fa-calendar'), ' Scadenza: ' + formatDate(p.dueDate)
-            ]),
-            p.madeOn ? el('span', { className: 'tag', title: 'Data della previsione' }, [
-                icon('far fa-clock'), ' Fatta il: ' + formatDate(p.madeOn)
-            ]) : null
-        ].concat(tagChips(p)));
-    }
-
     /* ---------- Featured predictions ---------- */
 
     function todayIso() {
@@ -190,18 +171,38 @@
         ]);
     }
 
-    /* Left panel: expired, most recent first. Right panel: not yet expired
-     * (due today or later), soonest first. The buttons move further away in
-     * time (older / later) or back. */
+    var MONTHS = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+
+    /* "2026-10-31" or an ISO timestamp -> "31 ott 2026" */
+    function shortDate(value) {
+        if (!value) return '—';
+        var d = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(value + 'T12:00:00') : new Date(value);
+        if (isNaN(d)) return '—';
+        return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    /* "Persona | Fonte" line used by cards and rows. */
+    function whoLine(p) {
+        var parts = [];
+        if (p.author) parts.push(el('span', null, [icon('fas fa-user'), p.author]));
+        if (p.author && p.source) parts.push(el('span', { className: 'sep', 'aria-hidden': 'true' }));
+        if (p.source) parts.push(el('span', null, [icon('fas fa-book-open'), p.source]));
+        return el('div', { className: 'who-line' }, parts);
+    }
+
+    /* Three cards: last expired, next due, last added. Each can move further
+     * away (older / later) and back. */
     var featured = {
-        expired: { index: 0, title: 'Appena scaduta', empty: 'Nessuna previsione scaduta.',
-                   further: 'Scaduta prima', closer: 'Più recente' },
-        upcoming: { index: 0, title: 'In scadenza', empty: 'Nessuna previsione in scadenza.',
-                    further: 'Scade dopo', closer: 'Scade prima' }
+        expired:  { index: 0, badge: 'Scaduta', empty: 'Nessuna previsione scaduta.' },
+        upcoming: { index: 0, badge: 'In attesa', empty: 'Nessuna previsione in attesa.' },
+        latest:   { index: 0, badge: 'Ultima inserita', empty: 'Ancora nessuna previsione.' }
     };
 
     function featuredList(kind) {
         var today = todayIso();
+        if (kind === 'latest') {
+            return all().sort(function (a, b) { return b.createdAt.localeCompare(a.createdAt) || String(b.id).localeCompare(String(a.id)); });
+        }
         var dated = all().filter(function (p) { return p.dueDate; });
         if (kind === 'expired') {
             return dated.filter(function (p) { return p.dueDate < today; })
@@ -211,36 +212,50 @@
             .sort(function (a, b) { return a.dueDate.localeCompare(b.dueDate) || b.createdAt.localeCompare(a.createdAt); });
     }
 
+    function featuredDateText(kind, p) {
+        if (kind === 'expired') return 'Scaduta il ' + shortDate(p.dueDate);
+        if (kind === 'upcoming') return 'Scadenza: ' + shortDate(p.dueDate);
+        return 'Inserita il ' + shortDate(p.createdAt);
+    }
+
+    function featuredFootText(kind, p) {
+        if (kind === 'latest') return p.createdByName ? 'Caricata da ' + p.createdByName : (dueStatus(p) || {}).text || '';
+        return (dueStatus(p) || {}).text || '';
+    }
+
     function renderFeaturedPanel(kind) {
         var conf = featured[kind];
         var list = featuredList(kind);
         var box = $('featured-' + kind);
         box.replaceChildren();
-        box.appendChild(el('p', { className: 'featured-kicker' }, [
-            icon(kind === 'expired' ? 'fas fa-history' : 'fas fa-hourglass-half'), ' ' + conf.title
-        ]));
         if (!list.length) {
-            box.appendChild(el('p', { className: 'featured-empty', text: conf.empty }));
+            box.append(el('div', { className: 'card-top' }, el('span', { className: 'badge', text: conf.badge })),
+                el('p', { className: 'featured-empty', text: conf.empty }));
             return;
         }
         conf.index = Math.max(0, Math.min(conf.index, list.length - 1));
         var p = list[conf.index];
-        [
-            statusBadge(p),
+        box.append(
+            el('div', { className: 'card-top' }, [
+                el('span', { className: 'badge', text: conf.badge }),
+                el('span', { text: featuredDateText(kind, p) })
+            ]),
             el('h3', null, el('a', { href: predictionUrl(p.id), className: 'prediction-link', 'data-id': p.id, text: p.title })),
-            p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
-            el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
-            metaTags(p),
-            p.description ? el('p', { className: 'featured-description', text: p.description }) : null,
-            el('div', { className: 'featured-nav' }, [
-                el('button', { type: 'button', className: 'secondary-btn', 'data-kind': kind, 'data-step': '-1' },
-                    [icon('fas fa-chevron-left'), ' ' + conf.closer]),
-                el('span', { className: 'featured-position', text: (conf.index + 1) + ' di ' + list.length }),
-                el('button', { type: 'button', className: 'secondary-btn', 'data-kind': kind, 'data-step': '1' },
-                    [conf.further + ' ', icon('fas fa-chevron-right')])
+            whoLine(p),
+            el('div', { className: 'card-foot' }, [
+                el('span', { text: featuredFootText(kind, p) }),
+                el('span', { className: 'card-nav' }, [
+                    el('span', { className: 'pos', text: (conf.index + 1) + '/' + list.length }),
+                    el('button', { type: 'button', className: 'icon-btn', 'data-kind': kind, 'data-step': '-1',
+                        'aria-label': kind === 'latest' ? 'Inserita dopo' : (kind === 'expired' ? 'Scaduta più di recente' : 'Scade prima') },
+                        icon('fas fa-chevron-left')),
+                    el('button', { type: 'button', className: 'icon-btn', 'data-kind': kind, 'data-step': '1',
+                        'aria-label': kind === 'latest' ? 'Inserita prima' : (kind === 'expired' ? 'Scaduta prima' : 'Scade dopo') },
+                        icon('fas fa-chevron-right'))
+                ])
             ])
-        ].forEach(function (node) { if (node) box.appendChild(node); });
-        var buttons = box.querySelectorAll('.featured-nav button');
+        );
+        var buttons = box.querySelectorAll('.card-nav button');
         buttons[0].disabled = conf.index === 0;
         buttons[1].disabled = conf.index >= list.length - 1;
     }
@@ -248,14 +263,17 @@
     function renderFeatured() {
         renderFeaturedPanel('expired');
         renderFeaturedPanel('upcoming');
+        renderFeaturedPanel('latest');
     }
 
     function onFeaturedNav(event) {
-        var btn = event.target.closest('.featured-nav button');
+        var btn = event.target.closest('.card-nav button');
         if (!btn || btn.disabled) return;
         var kind = btn.getAttribute('data-kind');
         featured[kind].index += Number(btn.getAttribute('data-step'));
         renderFeaturedPanel(kind);
+        var again = $('featured-' + kind).querySelector('.card-nav button[data-step="' + btn.getAttribute('data-step') + '"]');
+        if (again && !again.disabled) again.focus();
     }
 
     /* ---------- List and filters ---------- */
@@ -304,41 +322,44 @@
         return result;
     }
 
-    function card(p) {
-        return el('article', { className: 'prediction-card' }, [
-            el('div', { className: 'card-content' }, [
-                el('h3', null, el('a', { href: predictionUrl(p.id), className: 'prediction-link', 'data-id': p.id, text: p.title })),
-                p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
-                el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
-                metaTags(p),
-                el('p', { text: p.description || '' }),
-                el('div', { className: 'card-actions' }, [
-                    insertedNode(p),
-                    canDelete() ? el('button', {
-                        type: 'button',
-                        className: 'delete-btn',
-                        'data-id': p.id,
-                        'aria-label': 'Elimina la previsione',
-                        title: 'Elimina'
-                    }, [icon('fas fa-trash-alt'), ' Elimina']) : null
-                ])
-            ])
+    /* One archive row: title, tags, who, due date, status. */
+    function row(p) {
+        var status = dueStatus(p);
+        var tags = p.tags || [];
+        var shown = tags.slice(0, 2).map(function (t) {
+            return el('span', { className: 'tag t-' + t.id, text: t.label });
+        });
+        if (tags.length > 2) {
+            shown.push(el('span', { className: 'tag more', text: '+' + (tags.length - 2),
+                title: tags.slice(2).map(function (t) { return t.label; }).join(', ') }));
+        }
+        return el('article', { className: 'prediction-row' }, [
+            el('h3', { className: 'row-title' }, el('a', { href: predictionUrl(p.id), className: 'prediction-link', 'data-id': p.id, text: p.title })),
+            el('div', { className: 'row-tags' }, shown),
+            el('div', { className: 'row-cell' }, whoLine(p)),
+            el('div', { className: 'row-cell row-date', title: 'Da verificare entro il' }, [icon('far fa-calendar'), shortDate(p.dueDate)]),
+            el('div', { className: 'row-cell row-status' + (status && status.expired ? ' expired' : '') }, [
+                el('span', { className: 'dot', 'aria-hidden': 'true' }), status ? status.text : ''
+            ]),
+            canDelete() ? el('div', { className: 'row-admin' }, el('button', {
+                type: 'button', className: 'delete-btn', 'data-id': p.id, 'aria-label': 'Elimina la previsione', title: 'Elimina'
+            }, [icon('fas fa-trash-alt'), ' Elimina'])) : null
         ]);
     }
 
     function renderList() {
         var everything = all();
         var list = applyFilters(everything, readFilters());
-        var grid = $('predictions-grid');
-        grid.replaceChildren();
+        var box = $('predictions-grid');
+        box.replaceChildren();
 
         if (!list.length) {
-            grid.appendChild(el('p', {
+            box.appendChild(el('p', {
                 className: 'empty-state',
                 text: everything.length ? 'Nessuna previsione corrisponde ai filtri.' : 'Ancora nessuna previsione.'
             }));
         } else {
-            list.forEach(function (p) { grid.appendChild(card(p)); });
+            list.forEach(function (p) { box.appendChild(row(p)); });
         }
 
         $('results-count').textContent = list.length === everything.length
@@ -534,6 +555,13 @@
         $('detail-card').addEventListener('click', onDelete);
         $('featured-expired').addEventListener('click', onFeaturedNav);
         $('featured-upcoming').addEventListener('click', onFeaturedNav);
+        $('featured-latest').addEventListener('click', onFeaturedNav);
+        $('filters-toggle').addEventListener('click', function () {
+            var open = $('filter-panel').hidden;
+            $('filter-panel').hidden = !open;
+            this.setAttribute('aria-expanded', String(open));
+            if (open) $('filter-tag').focus();
+        });
         // Prediction titles open their page without reloading the site.
         document.addEventListener('click', function (e) {
             var link = e.target.closest('a.prediction-link');
@@ -825,6 +853,8 @@
         var id = currentDetailId();
         $('home-view').hidden = Boolean(id);
         $('detail-view').hidden = !id;
+        var hero = document.querySelector('.hero');
+        if (hero) hero.hidden = Boolean(id);
         if (!id) {
             document.title = BASE_TITLE;
             return;
@@ -883,7 +913,7 @@
         setupContact();
         // A page cached by the browser from an older version may not have the
         // elements this code expects: ask for a reload instead of hanging.
-        var required = ['featured-expired', 'featured-upcoming', 'home-view', 'detail-view', 'tag-options', 'filter-tag'];
+        var required = ['featured-expired', 'featured-upcoming', 'featured-latest', 'filters-toggle', 'home-view', 'detail-view', 'tag-options', 'filter-tag'];
         if (required.some(function (id) { return !$(id); })) {
             var text = document.getElementById('status-text');
             var panel = document.getElementById('status-panel');
