@@ -1,442 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WikiPrev - Verifiable Forecast Archive</title>
+    <title>WikiPrev - Archivio di previsioni verificabili</title>
+    <meta name="description" content="Chi ha detto cosa, entro quando. Un archivio collaborativo di previsioni di politici, aziende ed esperti, da ricontrollare alla scadenza.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+
+    <!-- Link previews (Telegram, WhatsApp, Facebook, X...). Image URLs must be absolute. -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="WikiPrev">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:url" content="https://margitelab.github.io/wikiprev/">
+    <meta property="og:title" content="WikiPrev - Archivio di previsioni verificabili">
+    <meta property="og:description" content="Chi ha detto cosa, entro quando. Un archivio collaborativo di previsioni di politici, aziende ed esperti, da ricontrollare alla scadenza.">
+    <meta property="og:image" content="https://margitelab.github.io/wikiprev/img/anteprima.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="WikiPrev, archivio di previsioni verificabili">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --light-color: #ecf0f1;
-            --dark-color: #34495e;
-            --success-color: #2ecc71;
-            --warning-color: #f39c12;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo i {
-            margin-right: 10px;
-            color: var(--secondary-color);
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-        
-        .nav-links li {
-            margin-left: 1.5rem;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s;
-            font-weight: 500;
-        }
-        
-        .nav-links a:hover {
-            color: var(--secondary-color);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
-        .hero {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-radius: 12px;
-            padding: 2.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 2.5rem;
-            text-align: center;
-        }
-        
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .random-prediction {
-            background-color: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-            border-left: 5px solid var(--secondary-color);
-        }
-        
-        .section-title {
-            display: flex;
-            align-items: center;
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-        }
-        
-        .section-title i {
-            margin-right: 10px;
-            font-size: 1.5rem;
-        }
-        
-        .random-prediction h2 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        
-        .prediction-meta {
-            display: flex;
-            gap: 1rem;
-            margin: 1rem 0;
-            flex-wrap: wrap;
-        }
-        
-        .tag {
-            background-color: var(--light-color);
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        .tag i {
-            margin-right: 5px;
-        }
-        
-        .tag.politics {
-            background-color: #ffeaa7;
-            color: #d35400;
-        }
-        
-        .tag.economics {
-            background-color: #d6eaf8;
-            color: #2980b9;
-        }
-        
-        .tag.technology {
-            background-color: #e8f8f5;
-            color: #16a085;
-        }
-        
-        .tag.sports {
-            background-color: #fbeee6;
-            color: #e67e22;
-        }
-        
-        .view-all {
-            display: inline-block;
-            margin-top: 1.5rem;
-            padding: 0.8rem 1.5rem;
-            background-color: var(--secondary-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 30px;
-            transition: background-color 0.3s;
-            font-weight: 500;
-        }
-        
-        .view-all:hover {
-            background-color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .filters {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2.5rem;
-        }
-        
-        .filter-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.2rem;
-        }
-        
-        .filter-form select, .filter-form input {
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .filter-form button {
-            padding: 0.8rem 1.5rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .filter-form button:hover {
-            background-color: var(--secondary-color);
-        }
-        
-        .predictions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-        
-        .prediction-card {
-            background-color: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .prediction-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
-        }
-        
-        .card-content {
-            padding: 1.5rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .prediction-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-        
-        .prediction-card .source {
-            color: var(--secondary-color);
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-        
-        .prediction-card p {
-            margin-bottom: 1.5rem;
-            flex-grow: 1;
-        }
-        
-        .read-more {
-            display: inline-flex;
-            align-items: center;
-            margin-top: auto;
-            color: var(--secondary-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .read-more:hover {
-            color: var(--primary-color);
-        }
-        
-        .read-more i {
-            margin-left: 5px;
-            transition: transform 0.3s;
-        }
-        
-        .read-more:hover i {
-            transform: translateX(5px);
-        }
-        
-        .add-prediction {
-            background-color: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 2.5rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--primary-color);
-        }
-        
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        
-        .submit-btn {
-            padding: 1rem 2rem;
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .submit-btn:hover {
-            background-color: #27ae60;
-        }
-        
-        footer {
-            background-color: var(--dark-color);
-            color: white;
-            text-align: center;
-            padding: 2.5rem;
-            margin-top: 3rem;
-        }
-        
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            list-style: none;
-            margin: 1.5rem 0;
-        }
-        
-        .footer-links li {
-            margin: 0 1rem;
-        }
-        
-        .footer-links a {
-            color: var(--light-color);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer-links a:hover {
-            color: var(--secondary-color);
-        }
-        
-        @media (max-width: 768px) {
-            .filter-form {
-                grid-template-columns: 1fr;
-            }
-            
-            .predictions-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-links {
-                display: none;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .hero p {
-                font-size: 1rem;
-            }
-        }
-        
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            .nav-links {
-                position: fixed;
-                top: 60px;
-                left: 0;
-                right: 0;
-                background-color: var(--primary-color);
-                flex-direction: column;
-                padding: 1rem;
-                display: none;
-                box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-            }
-            
-            .nav-links.active {
-                display: flex;
-            }
-            
-            .nav-links li {
-                margin: 0.8rem 0;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css?v=20261109b">
 </head>
 <body>
     <header>
@@ -446,291 +30,235 @@
                 <span>WikiPrev</span>
             </div>
             <ul class="nav-links">
-                <li><a href="#" class="active">Home</a></li>
-                <li><a href="#">Archive</a></li>
-                <li><a href="#">Categories</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="./#featured">In evidenza</a></li>
+                <li><a href="./#archive">Archivio</a></li>
+                <li><a href="./#add">Aggiungi una previsione</a></li>
             </ul>
-            <button class="mobile-menu-btn">
+            <button class="mobile-menu-btn" aria-label="Apri il menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
         </nav>
     </header>
 
-    <div class="container">
+    <main class="container">
         <section class="hero">
-            <h1>WikiPrev - Verifiable Forecast Archive</h1>
-            <p>Track predictions, verify outcomes, and never forget to check what was promised</p>
-        </section>
-        
-        <div class="section-title">
-            <i class="fas fa-star"></i>
-            <h2>Featured Prediction</h2>
-        </div>
-        
-        <section class="random-prediction">
-            <div class="prediction-content">
-                <h3>Stock market will reach new highs by year end</h3>
-                <div class="prediction-meta">
-                    <span class="tag"><i class="far fa-calendar"></i> Due: 31/12/2023</span>
-                    <span class="tag economics"><i class="fas fa-chart-line"></i> Economics</span>
-                    <span class="tag"><i class="fas fa-source"></i> Financial Times</span>
-                </div>
-                <p>According to Financial Times analysts, the stock market is set to grow despite geopolitical uncertainties, with the FTSE MIB potentially reaching 28,500 points by the end of the year.</p>
-                <a href="#" class="view-all"><i class="fas fa-search"></i> View details and verify</a>
-            </div>
+            <h1>Wikiprev - Archivio di previsioni</h1>
         </section>
 
-        <div class="section-title">
-            <i class="fas fa-filter"></i>
-            <h2>Filter Predictions</h2>
+        <p class="local-mode-banner" id="local-mode-banner" hidden>
+            <i class="fas fa-info-circle"></i>
+            Modalità locale: le previsioni restano solo in questo browser e nessun altro le vede.
+        </p>
+
+        <section class="status-panel" id="status-panel" hidden>
+            <p id="status-text">Caricamento…</p>
+        </section>
+
+        <div id="app-content" hidden>
+
+        <!-- Single prediction page (shown when the address has ?p=<id>) -->
+        <section class="detail-view" id="detail-view" hidden>
+            <a href="./" class="back-link" id="back-link"><i class="fas fa-arrow-left"></i> Torna all'archivio</a>
+            <article class="detail-card" id="detail-card">
+                <!-- Filled by js/app.js -->
+            </article>
+        </section>
+
+        <div id="home-view">
+
+        <div class="section-title" id="featured">
+            <i class="fas fa-star"></i>
+            <h2>In evidenza</h2>
         </div>
-        
+
+        <div class="featured-grid">
+            <section class="random-prediction featured-panel expired" id="featured-expired" aria-label="Previsione appena scaduta">
+                <!-- Filled by js/app.js -->
+            </section>
+            <section class="random-prediction featured-panel upcoming" id="featured-upcoming" aria-label="Prossima previsione in scadenza">
+                <!-- Filled by js/app.js -->
+            </section>
+        </div>
+
+        <div class="section-title" id="archive">
+            <i class="fas fa-filter"></i>
+            <h2>Filtra le previsioni</h2>
+        </div>
+
         <section class="filters">
-            <form class="filter-form">
-                <select>
-                    <option value="">All categories</option>
-                    <option value="politics">Politics</option>
-                    <option value="economics">Economics</option>
-                    <option value="technology">Technology</option>
-                    <option value="sports">Sports</option>
-                    <option value="science">Science</option>
-                </select>
-                
-                <input type="date" placeholder="From date">
-                
-                <input type="date" placeholder="To date">
-                
-                <select>
-                    <option value="">Sort by</option>
-                    <option value="recent">Most recent</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="due-date">Due date</option>
-                </select>
-                
-                <button type="submit"><i class="fas fa-search"></i> Search Predictions</button>
+            <form class="filter-form" id="filter-form">
+                <div class="field">
+                    <label for="filter-text">Cerca</label>
+                    <input type="search" id="filter-text" placeholder="Titolo, autore, fonte, tag…">
+                </div>
+
+                <div class="field">
+                    <label for="filter-tag">Tag</label>
+                    <select id="filter-tag">
+                        <option value="">Tutti i tag</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="filter-from">Scadenza dal</label>
+                    <input type="date" id="filter-from">
+                </div>
+
+                <div class="field">
+                    <label for="filter-to">Scadenza al</label>
+                    <input type="date" id="filter-to">
+                </div>
+
+                <div class="field">
+                    <label for="filter-sort">Ordina per</label>
+                    <select id="filter-sort">
+                        <option value="recent">Aggiunte di recente</option>
+                        <option value="oldest">Aggiunte per prime</option>
+                        <option value="due-asc">Scadenza più vicina</option>
+                        <option value="due-desc">Scadenza più lontana</option>
+                    </select>
+                </div>
+
+                <div class="actions">
+                    <button type="reset" class="secondary"><i class="fas fa-undo"></i> Azzera filtri</button>
+                </div>
             </form>
         </section>
 
         <div class="section-title">
             <i class="fas fa-archive"></i>
-            <h2>Recent Predictions</h2>
+            <h2>Previsioni</h2>
         </div>
-        
-        <section class="predictions-grid">
-            <div class="prediction-card">
-                <div class="card-content">
-                    <h3>New government within a week</h3>
-                    <p class="source">Source: Corriere della Sera</p>
-                    <div class="prediction-meta">
-                        <span class="tag"><i class="far fa-calendar"></i> Due: 15/11/2023</span>
-                        <span class="tag politics"><i class="fas fa-landmark"></i> Politics</span>
-                    </div>
-                    <p>According to sources close to the negotiation, the government crisis will be resolved within 7 days with the formation of a national unity government.</p>
-                    <a href="#" class="read-more">Read more <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-            
-            <div class="prediction-card">
-                <div class="card-content">
-                    <h3>iPhone 15 will be revolutionary</h3>
-                    <p class="source">Source: TechCrunch</p>
-                    <div class="prediction-meta">
-                        <span class="tag"><i class="far fa-calendar"></i> Due: 30/09/2023</span>
-                        <span class="tag technology"><i class="fas fa-microchip"></i> Technology</span>
-                    </div>
-                    <p>Apple is preparing innovative features for the next iPhone that will change the smartphone market, including a bezel-less display.</p>
-                    <a href="#" class="read-more">Read more <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-            
-            <div class="prediction-card">
-                <div class="card-content">
-                    <h3>Juventus will win the championship</h3>
-                    <p class="source">Source: La Gazzetta dello Sport</p>
-                    <div class="prediction-meta">
-                        <span class="tag"><i class="far fa-calendar"></i> Due: 31/05/2023</span>
-                        <span class="tag sports"><i class="fas fa-running"></i> Sports</span>
-                    </div>
-                    <p>Despite a difficult start, the Turin team will recover and win the championship thanks to the return of some key injured players.</p>
-                    <a href="#" class="read-more">Read more <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
+
+        <p class="results-count" id="results-count"></p>
+
+        <section class="predictions-grid" id="predictions-grid">
+            <!-- Filled by js/app.js -->
         </section>
-        
-        <div class="section-title">
+
+        <div class="section-title" id="add">
             <i class="fas fa-plus-circle"></i>
-            <h2>Add a Prediction</h2>
+            <h2>Aggiungi una previsione</h2>
         </div>
-        
+
         <section class="add-prediction">
-            <form id="prediction-form">
+            <form id="prediction-form" novalidate>
                 <div class="form-group">
-                    <label for="title">Prediction Title</label>
-                    <input type="text" id="title" placeholder="Enter prediction title">
+                    <label for="contributor">Il tuo nome <span class="required">*</span></label>
+                    <input type="text" id="contributor" name="contributor" required maxlength="80"
+                           autocomplete="name" list="contributors-list" placeholder="Come vuoi comparire tra chi carica le previsioni">
+                    <p class="field-hint">Questo browser se lo ricorda. Usa sempre lo stesso nome, così le statistiche ti riconoscono.</p>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="source">Source</label>
-                    <input type="text" id="source" placeholder="Enter source (newspaper, website, etc.)">
+                    <label for="title">Previsione <span class="required">*</span></label>
+                    <input type="text" id="title" name="title" required maxlength="300"
+                           placeholder="Es. Il nuovo stadio sarà completato entro giugno 2026">
                 </div>
-                
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="author">Chi l'ha fatta</label>
+                        <input type="text" id="author" name="author" maxlength="160" list="people-list"
+                               placeholder="Persona o organizzazione (facoltativo)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="source">Fonte <span class="required">*</span></label>
+                        <input type="text" id="source" name="source" required maxlength="160" list="outlets-list"
+                               placeholder="Giornale, sito, programma TV…">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="url">Source URL (optional)</label>
-                    <input type="url" id="url" placeholder="Enter link to original news">
+                    <label for="url">Link alla fonte</label>
+                    <input type="url" id="url" name="url" placeholder="https://… (facoltativo)">
                 </div>
-                
+
+                <fieldset class="form-group tag-picker" id="tag-picker">
+                    <legend>Tag <span class="required">*</span></legend>
+                    <div class="tag-options" id="tag-options"></div>
+                    <div class="new-tag-row">
+                        <input type="text" id="newTag" maxlength="40" placeholder="Nuovo tag, es. Campagna elettorale">
+                        <button type="button" id="add-tag-btn" class="secondary-btn"><i class="fas fa-plus"></i> Aggiungi</button>
+                    </div>
+                    <p class="field-hint">Scegline almeno uno; puoi selezionarne più di uno. I nuovi tag saranno disponibili per tutti.</p>
+                </fieldset>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="madeOn">Data della previsione</label>
+                        <input type="date" id="madeOn" name="madeOn">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dueDate">Da verificare entro il <span class="required">*</span></label>
+                        <input type="date" id="dueDate" name="dueDate" required>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="category">Category</label>
-                    <select id="category">
-                        <option value="">Select a category</option>
-                        <option value="politics">Politics</option>
-                        <option value="economics">Economics</option>
-                        <option value="technology">Technology</option>
-                        <option value="sports">Sports</option>
-                        <option value="science">Science</option>
-                    </select>
+                    <label for="description">Descrizione</label>
+                    <textarea id="description" name="description" maxlength="2000"
+                              placeholder="Descrivi la previsione nel dettaglio"></textarea>
                 </div>
-                
-                <div class="form-group">
-                    <label for="expiry">Due Date for Verification</label>
-                    <input type="date" id="expiry">
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" placeholder="Describe the prediction in detail"></textarea>
-                </div>
-                
-                <button type="submit" class="submit-btn"><i class="fas fa-plus"></i> Add Prediction</button>
+
+                <button type="submit" class="submit-btn"><i class="fas fa-plus"></i> Aggiungi previsione</button>
+                <p class="form-message" id="form-message" role="status"></p>
             </form>
+            <datalist id="people-list"></datalist>
+            <datalist id="outlets-list"></datalist>
+            <datalist id="contributors-list"></datalist>
         </section>
-    </div>
+
+        </div><!-- /home-view -->
+
+        <section class="admin-panel" id="admin-panel" hidden>
+            <h2><i class="fas fa-user-shield"></i> Amministrazione</h2>
+            <form id="admin-form" novalidate>
+                <div id="admin-login">
+                    <p>Inserisci il codice amministratore per poter eliminare le previsioni. Questo browser lo ricorderà.</p>
+                    <label for="admin-code">Codice amministratore</label>
+                    <div class="admin-row">
+                        <input type="password" id="admin-code" autocomplete="current-password">
+                        <button type="submit" class="submit-btn">Entra</button>
+                    </div>
+                    <p class="form-message" id="admin-message" role="status"></p>
+                </div>
+            </form>
+            <div id="admin-active" hidden>
+                <p>Sei l'amministratore: su ogni previsione compare il pulsante "Elimina".</p>
+                <button type="button" id="admin-logout" class="secondary-btn">Esci dalla modalità amministratore</button>
+            </div>
+            <div class="visit-stats" id="visit-stats" hidden>
+                <h3><i class="fas fa-chart-bar"></i> Visite al sito (ultimi 30 giorni)
+                    <button type="button" id="visit-stats-refresh" class="secondary-btn small-btn">Aggiorna</button>
+                </h3>
+                <div id="visit-stats-body"></div>
+            </div>
+        </section>
+        </div>
+    </main>
 
     <footer>
         <div class="footer-content">
-            <p>WikiPrev - Verifiable Forecast Archive</p>
+            <p>WikiPrev - Archivio di previsioni verificabili</p>
             <ul class="footer-links">
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Archive</a></li>
-                <li><a href="#">Terms of Service</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="./#featured">In evidenza</a></li>
+                <li><a href="./#archive">Archivio</a></li>
+                <li><a href="./#add">Aggiungi una previsione</a></li>
+                <li id="admin-link-item" hidden><a href="#admin-panel" id="admin-link">Amministrazione</a></li>
             </ul>
-            <p>© 2023 WikiPrev - All rights reserved</p>
+            <p>Software libero con licenza GNU GPL v3</p>
         </div>
     </footer>
 
-   <script>
-    // Dati temporanei salvati nel browser
-    let predictions = JSON.parse(localStorage.getItem('wikiprev_predictions')) || [
-        {
-            id: 1,
-            title: "Stock market will reach new highs by year end",
-            source: "Financial Times", 
-            expiry: "2023-12-31",
-            category: "economics",
-            description: "According to Financial Times analysts, the stock market is set to grow despite geopolitical uncertainties.",
-            verified: false,
-            outcome: null
-        },
-        {
-            id: 2,
-            title: "New government within a week",
-            source: "Corriere della Sera",
-            expiry: "2023-11-15",
-            category: "politics",
-            description: "According to sources close to the negotiation, the government crisis will be resolved within 7 days.",
-            verified: false,
-            outcome: null
-        }
-    ];
-
-    // Salva i dati nel browser
-    function savePredictions() {
-        localStorage.setItem('wikiprev_predictions', JSON.stringify(predictions));
-    }
-
-    // Aggiungi una nuova previsione
-    function addPrediction(event) {
-        event.preventDefault();
-        
-        const newPrediction = {
-            id: Date.now(),
-            title: document.getElementById('title').value,
-            source: document.getElementById('source').value,
-            expiry: document.getElementById('expiry').value,
-            category: document.getElementById('category').value,
-            description: document.getElementById('description').value,
-            verified: false,
-            outcome: null
-        };
-
-        predictions.push(newPrediction);
-        savePredictions();
-        
-        alert('Prediction added successfully! Refresh the page to see it.');
-        document.getElementById('prediction-form').reset();
-    }
-
-    // Mostra le previsioni nella griglia
-    function renderPredictions() {
-        const container = document.querySelector('.predictions-grid');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        predictions.forEach(prediction => {
-            const card = `
-                <div class="prediction-card">
-                    <div class="card-content">
-                        <h3>${prediction.title}</h3>
-                        <p class="source">Source: ${prediction.source}</p>
-                        <div class="prediction-meta">
-                            <span class="tag"><i class="far fa-calendar"></i> Due: ${prediction.expiry}</span>
-                            <span class="tag ${prediction.category}"><i class="fas fa-tag"></i> ${prediction.category}</span>
-                        </div>
-                        <p>${prediction.description}</p>
-                        <a href="#" class="read-more">View details <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                </div>
-            `;
-            container.innerHTML += card;
-        });
-    }
-
-    // Previsione casuale
-    function loadRandomPrediction() {
-        if (predictions.length > 0) {
-            const randomPred = predictions[Math.floor(Math.random() * predictions.length)];
-            document.querySelector('.random-prediction h3').textContent = randomPred.title;
-            document.querySelector('.random-prediction p').textContent = randomPred.description;
-        }
-    }
-
-    // Setup iniziale
-    document.addEventListener('DOMContentLoaded', function() {
-        // Collegamento form
-        const form = document.getElementById('prediction-form');
-        if (form) {
-            form.addEventListener('submit', addPrediction);
-        }
-        
-        // Carica dati
-        renderPredictions();
-        loadRandomPrediction();
-        
-        // Mobile menu
-        const mobileBtn = document.querySelector('.mobile-menu-btn');
-        const navLinks = document.querySelector('.nav-links');
-        
-        if (mobileBtn && navLinks) {
-            mobileBtn.addEventListener('click', function() {
-                navLinks.classList.toggle('active');
-            });
-        }
-    });
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script src="js/config.js?v=20261109b"></script>
+    <script src="js/model.js?v=20261109b"></script>
+    <script src="js/store-local.js?v=20261109b"></script>
+    <script src="js/store-supabase.js?v=20261109b"></script>
+    <script src="js/store.js?v=20261109b"></script>
+    <script src="js/app.js?v=20261109b"></script>
 </body>
 </html>
