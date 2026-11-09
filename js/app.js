@@ -833,6 +833,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // A page cached by the browser from an older version may not have the
+        // elements this code expects: ask for a reload instead of hanging.
+        var required = ['featured-expired', 'featured-upcoming', 'home-view', 'detail-view', 'tag-options', 'filter-tag'];
+        if (required.some(function (id) { return !$(id); })) {
+            var text = document.getElementById('status-text');
+            var panel = document.getElementById('status-panel');
+            if (text && panel) {
+                text.textContent = 'È disponibile una nuova versione di Wikiprev: ricarica la pagina (Ctrl+Maiusc+R, oppure chiudi e riapri la scheda).';
+                panel.hidden = false;
+            }
+            return;
+        }
         setupMobileMenu();
         $('local-mode-banner').hidden = store.mode !== 'local';
         $('contributor').value = savedName();

@@ -90,6 +90,10 @@ Il sito è statico, quindi qualunque hosting statico va bene:
 - **GitHub Pages:** Settings → Pages → Deploy from a branch. È gratuito per i repository pubblici.
 - **Netlify** o **Cloudflare Pages:** gratuiti anche con un repository privato.
 
+Quando si modificano CSS o JavaScript, aggiornare il numero di versione `?v=...` nei
+link in fondo a `index.html` (e in testa per il CSS): così i browser non mescolano
+file vecchi e nuovi.
+
 Per provarlo in locale:
 
 ```bash
