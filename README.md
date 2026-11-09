@@ -105,7 +105,10 @@ python3 -m http.server 8000
 Telegram, WhatsApp e simili costruiscono l'anteprima di un link leggendo l'HTML senza
 eseguire JavaScript, quindi per loro `?p=<id>` sarebbe sempre la pagina principale.
 Per questo ogni previsione ha anche una piccola pagina statica, `p/<id>/`, con titolo,
-scadenza, autore, fonte e tag nei tag Open Graph, che porta subito alla pagina normale.
+scadenza, autore, fonte e tag nei tag Open Graph e un'immagine propria
+(`p/<id>/anteprima.jpg`, con il testo della previsione), che porta subito alla pagina
+normale. Le immagini si disegnano con Playwright e si ridisegnano solo quando la
+previsione cambia o scade.
 Il pulsante **Copia link** usa questa pagina quando esiste.
 
 Le pagine si generano con:
