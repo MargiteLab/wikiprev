@@ -5,8 +5,10 @@
  * details when its link is shared. Those apps do not run JavaScript, so the
  * normal page (?p=<id>) always looks like the home page to them.
  *
- * Each page carries Open Graph tags and immediately sends visitors on to
- * the normal page, ../../?p=<id>.
+ * Each page carries Open Graph tags and sends visitors on to the normal page
+ * (?p=<id>) with JavaScript only. There is deliberately no <meta refresh> and
+ * the canonical URL is the share page itself: link-preview bots may follow
+ * either of those to the home page and show its generic preview instead.
  *
  * Usage:
  *   node scripts/build-share-pages.mjs                 # reads the database (js/config.js)
@@ -83,7 +85,7 @@ function page(row) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${esc(title)} - Wikiprev</title>
     <meta name="description" content="${esc(description)}">
-    <link rel="canonical" href="${esc(target)}">
+    <link rel="canonical" href="${esc(shareUrl)}">
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="Wikiprev">
     <meta property="og:locale" content="it_IT">
@@ -95,11 +97,12 @@ function page(row) {
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Wikiprev, archivio di previsioni">
     <meta name="twitter:card" content="summary_large_image">
-    <meta http-equiv="refresh" content="0; url=${esc(target)}">
     <script>location.replace(${JSON.stringify(target)});</script>
 </head>
 <body>
-    <p><a href="${esc(target)}">${esc(title)}</a></p>
+    <p><strong>${esc(title)}</strong></p>
+    <p>${esc(description)}</p>
+    <p><a href="${esc(target)}">Apri la previsione su Wikiprev</a></p>
 </body>
 </html>
 `;
