@@ -69,7 +69,7 @@
         function describeError(error) {
             var msg = (error && error.message) || String(error);
             // Messages written in Italian by the database functions are shown as they are.
-            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome di un tag|Il nome di un'etichetta|Puoi indicare al massimo|Scegli almeno un tag|Solo l'amministratore può vedere|Com'è andata si potrà|Il link deve|La nota può|Questo link è già|Questa previsione ha già|Link non trovato)/.test(msg)) return msg;
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome di un tag|Il nome di un'etichetta|Puoi indicare al massimo|Scegli almeno un tag|Solo l'amministratore può vedere|Il link deve|La nota può|Questo link è già|Questa previsione ha già|Link non trovato)/.test(msg)) return msg;
             if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
             if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
             if (/failed to fetch|network/i.test(msg)) return 'Impossibile contattare il database. Controlla la connessione e riprova.';

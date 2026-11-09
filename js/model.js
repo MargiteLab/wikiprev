@@ -104,16 +104,12 @@
     var MAX_NOTE = 300;
 
     /* Checks a "Com'è andata" link before it is saved. */
-    function validateOutcomeLink(input, prediction, today) {
+    function validateOutcomeLink(input, prediction) {
         var errors = [];
         if (!str(input.contributor)) errors.push('Scrivi il tuo nome.');
         else if (str(input.contributor).length > 80) errors.push('Il nome può avere al massimo 80 caratteri.');
         if (!isValidUrl(str(input.url))) errors.push('Il link deve iniziare con http:// o https://.');
         if (str(input.note).length > MAX_NOTE) errors.push('La nota può avere al massimo ' + MAX_NOTE + ' caratteri.');
-        if (prediction && today && prediction.dueDate > today) {
-            var d = prediction.dueDate.split('-');
-            errors.push("Com'è andata si potrà aggiungere dal " + d[2] + '/' + d[1] + '/' + d[0] + '.');
-        }
         if (prediction && (prediction.outcomeLinks || []).some(function (l) {
             return l.url.toLowerCase() === str(input.url).toLowerCase();
         })) errors.push('Questo link è già stato aggiunto.');

@@ -1,10 +1,10 @@
--- WikiPrev: "Com'è andata". Once a prediction's due date has arrived, anyone
--- can attach one or more links to news that show how things went. Only links
--- (with an optional short note) are stored, no verdict: the reader judges
--- from the sources.
+-- WikiPrev: "Com'è andata". Anyone can attach one or more links to news that
+-- show how a prediction went: usually after its due date, but also before it
+-- if the outcome is already known. Only links (with an optional short note)
+-- are stored, no verdict: the reader judges from the sources.
 --
--- * A link can be added from the due date on (Italian time), by name, like a
---   prediction. The same link cannot be attached twice to one prediction.
+-- * A link is added by name, like a prediction. The same link cannot be
+--   attached twice to one prediction.
 -- * Only the administrator removes a link (it is hidden, not erased).
 -- * predictions_view gets a new column outcome_links:
 --   [{ "id", "url", "note", "added_by", "created_at" }, ...] oldest first.
@@ -41,18 +41,12 @@ security definer
 set search_path = public
 as $$
 declare
-    v_due   date;
-    v_today date := (now() at time zone 'Europe/Rome')::date;
     v_url   text := btrim(coalesce(p_url, ''));
     v_note  text := btrim(coalesce(p_note, ''));
     v_id    uuid;
 begin
-    select due_on into v_due from predictions where id = p_prediction_id and deleted_at is null;
-    if not found then
+    if not exists (select 1 from predictions where id = p_prediction_id and deleted_at is null) then
         raise exception 'Previsione non trovata o già eliminata.' using errcode = 'P0002';
-    end if;
-    if v_due > v_today then
-        raise exception 'Com''è andata si potrà aggiungere dal %.', to_char(v_due, 'DD/MM/YYYY') using errcode = '22023';
     end if;
     if v_url !~* '^https?://[^\s]+$' or length(v_url) > 2000 then
         raise exception 'Il link deve iniziare con http:// o https://.' using errcode = '22023';

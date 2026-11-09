@@ -666,15 +666,10 @@
         if (predictions.length !== before) save();
     }
 
-    function todayIso() {
-        var d = new Date();
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    }
-
     function addOutcomeLink(predictionId, input) {
         var p = predictions.filter(function (x) { return x.id === predictionId; })[0];
         if (!p) return { ok: false, errors: ['Previsione non trovata o già eliminata.'] };
-        var errors = model.validateOutcomeLink(input, p, todayIso());
+        var errors = model.validateOutcomeLink(input, p);
         if (errors.length) return { ok: false, errors: errors };
         p.outcomeLinks = (p.outcomeLinks || []).concat([{
             id: newId(), url: str(input.url), note: str(input.note),

@@ -822,23 +822,20 @@
                     ])
                 ]);
             })));
-        } else if (due) {
-            children.push(el('p', { className: 'outcome-empty', text: 'Nessuna notizia ancora. Se sai com\'è andata, aggiungi il link.' }));
+        } else {
+            children.push(el('p', { className: 'outcome-empty', text: due
+                ? "Nessuna notizia ancora. Se sai com'è andata, aggiungi il link."
+                : "Non è ancora scaduta. Se una notizia la conferma o la smentisce già prima della scadenza, puoi aggiungerne il link." }));
         }
-        if (due) {
-            children.push(el('form', { className: 'outcome-form', id: 'outcome-form', 'data-id': p.id, novalidate: 'novalidate' }, [
-                el('div', { className: 'outcome-fields' }, [
-                    el('label', null, ['Link alla notizia', el('input', { type: 'url', name: 'url', required: 'required', placeholder: 'https://…', maxlength: '2000' })]),
-                    el('label', null, ['Di cosa parla (facoltativo)', el('input', { type: 'text', name: 'note', maxlength: String(window.WikiPrevModel.MAX_NOTE), placeholder: 'Es. il titolo della notizia' })]),
-                    el('label', null, ['Il tuo nome', el('input', { type: 'text', name: 'contributor', required: 'required', maxlength: '80', value: savedName(), list: 'contributors-list' })])
-                ]),
-                el('button', { type: 'submit', className: 'secondary-btn' }, [icon('fas fa-plus'), ' Aggiungi link']),
-                el('p', { className: 'form-message', id: 'outcome-message', role: 'status' })
-            ]));
-        } else if (p.dueDate) {
-            children.push(el('p', { className: 'outcome-empty', text: 'Dal ' + formatDate(p.dueDate) +
-                " chiunque potrà aggiungere i link alle notizie che dicono com'è andata." }));
-        }
+        children.push(el('form', { className: 'outcome-form', id: 'outcome-form', 'data-id': p.id, novalidate: 'novalidate' }, [
+            el('div', { className: 'outcome-fields' }, [
+                el('label', null, ['Link alla notizia', el('input', { type: 'url', name: 'url', required: 'required', placeholder: 'https://…', maxlength: '2000' })]),
+                el('label', null, ['Di cosa parla (facoltativo)', el('input', { type: 'text', name: 'note', maxlength: String(window.WikiPrevModel.MAX_NOTE), placeholder: 'Es. il titolo della notizia' })]),
+                el('label', null, ['Il tuo nome', el('input', { type: 'text', name: 'contributor', required: 'required', maxlength: '80', value: savedName(), list: 'contributors-list' })])
+            ]),
+            el('button', { type: 'submit', className: 'secondary-btn' }, [icon('fas fa-plus'), ' Aggiungi link']),
+            el('p', { className: 'form-message', id: 'outcome-message', role: 'status' })
+        ]));
         return el('section', { className: 'outcome-box', 'aria-label': "Com'è andata" }, children);
     }
 
@@ -854,7 +851,7 @@
         var input = { url: form.elements.url.value, note: form.elements.note.value, contributor: form.elements.contributor.value };
         var p = items.find(function (x) { return String(x.id) === id; });
         var msg = $('outcome-message');
-        var errors = window.WikiPrevModel.validateOutcomeLink(input, p, todayIso());
+        var errors = window.WikiPrevModel.validateOutcomeLink(input, p);
         if (errors.length) {
             msg.className = 'form-message error';
             msg.textContent = errors.join(' ');
