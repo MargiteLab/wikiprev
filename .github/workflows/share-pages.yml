@@ -1,0 +1,50 @@
+# Rebuilds the share pages p/<id>/index.html from the database, so links to
+# single predictions show their own title in Telegram, WhatsApp and similar
+# apps. Commits only when something changed; GitHub Pages then republishes.
+#
+# - "Run workflow" in the Actions tab runs it on the chosen branch.
+# - The schedule only runs once this file is on the repository's default
+#   branch (GitHub's rule); it then updates PAGES_BRANCH below.
+name: Pagine di condivisione
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17,47 * * * *'   # every 30 minutes
+
+permissions:
+  contents: write
+
+concurrency:
+  group: share-pages
+  cancel-in-progress: false
+
+env:
+  PAGES_BRANCH: claude/epic-faraday-z2rslk   # the branch GitHub Pages publishes
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && env.PAGES_BRANCH || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build share pages
+        run: node scripts/build-share-pages.mjs
+
+      - name: Commit changes
+        run: |
+          git add -A p
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update share pages"
+          git push

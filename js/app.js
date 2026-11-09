@@ -108,6 +108,23 @@
         return window.location.pathname + '?p=' + encodeURIComponent(id);
     }
 
+    /* Share page p/<id>/ (built by scripts/build-share-pages.mjs): Telegram,
+     * WhatsApp & co. show the prediction's own title for it. */
+    function sharePageUrl(id) {
+        return new URL('p/' + encodeURIComponent(id) + '/', window.location.origin + window.location.pathname).href;
+    }
+
+    /* The share page if it has been built already, otherwise the normal link. */
+    async function bestShareUrl(id) {
+        if (store.mode === 'supabase') {
+            try {
+                var res = await fetch(sharePageUrl(id), { method: 'HEAD', cache: 'no-store' });
+                if (res.ok) return sharePageUrl(id);
+            } catch (e) { /* fall back */ }
+        }
+        return predictionAbsoluteUrl(id);
+    }
+
     function predictionAbsoluteUrl(id) {
         return window.location.origin + predictionUrl(id);
     }
@@ -780,6 +797,11 @@
         ].forEach(function (node) { if (node) card.appendChild(node); });
         $('share-url').addEventListener('focus', function (e) { e.target.select(); });
         $('copy-link').addEventListener('click', function (e) { copyText(link, e.currentTarget); });
+        bestShareUrl(p.id).then(function (best) {
+            if (best === link || currentDetailId() !== String(p.id) || !$('share-url')) return;
+            link = best;
+            $('share-url').value = best;
+        });
         if (navigator.share) {
             $('native-share').addEventListener('click', function () {
                 navigator.share({ title: p.title, text: p.title, url: link }).catch(function () { /* cancelled */ });

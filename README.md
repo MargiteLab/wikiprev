@@ -100,6 +100,24 @@ Per provarlo in locale:
 python3 -m http.server 8000
 ```
 
+## Anteprime su Telegram e WhatsApp
+
+Telegram, WhatsApp e simili costruiscono l'anteprima di un link leggendo l'HTML senza
+eseguire JavaScript, quindi per loro `?p=<id>` sarebbe sempre la pagina principale.
+Per questo ogni previsione ha anche una piccola pagina statica, `p/<id>/`, con titolo,
+scadenza, autore, fonte e tag nei tag Open Graph, che porta subito alla pagina normale.
+Il pulsante **Copia link** usa questa pagina quando esiste.
+
+Le pagine si generano con:
+
+```bash
+node scripts/build-share-pages.mjs
+```
+
+e il workflow **Pagine di condivisione** (`.github/workflows/share-pages.yml`) le
+rigenera e le carica sul branch: dalla scheda **Actions** di GitHub con **Run workflow**,
+e ogni 30 minuti quando il file si trova sul branch predefinito del repository.
+
 ## Visite al sito
 
 Ogni apertura della pagina registra nel database: data e ora, un numero casuale
