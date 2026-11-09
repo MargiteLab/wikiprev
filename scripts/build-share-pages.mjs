@@ -31,7 +31,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'https://margitelab.github.io/wikiprev/';
 const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png?v=2';
 const OUT_DIR = join(ROOT, 'p');
-const IMAGE_TEMPLATE_VERSION = 1;   // bump to redraw every image
+const IMAGE_TEMPLATE_VERSION = 2;   // bump to redraw every image
 
 function readConfig() {
     const text = readFileSync(join(ROOT, 'js', 'config.js'), 'utf8');
@@ -106,42 +106,44 @@ function imageHtml(f) {
 body { width: 1200px; height: 630px; overflow: hidden; color: #fff;
   font-family: 'DejaVu Sans', 'Noto Sans', 'Liberation Sans', Arial, sans-serif;
   background: linear-gradient(135deg, #2c3e50 0%, #2f5f86 60%, #3498db 100%);
-  display: flex; flex-direction: column; padding: 56px 70px 52px; gap: 28px; }
-.top { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  display: flex; flex-direction: column; padding: 44px 64px 46px; gap: 22px; }
+/* Text in the lower part is large on purpose: phones show the image small. */
 .brand { display: flex; align-items: center; gap: 14px; font-size: 30px; font-weight: bold; }
-.brand small { font-weight: normal; font-size: 22px; color: #cfe3f2; }
-.status { font-size: 24px; font-weight: bold; padding: 10px 22px; border-radius: 40px; white-space: nowrap; }
+.brand small { font-weight: normal; font-size: 24px; color: #cfe3f2; }
+.title-box { flex: 1; display: flex; align-items: center; min-height: 0; }
+h1 { font-size: 64px; line-height: 1.16; letter-spacing: -0.5px; }
+.bottom { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.status { font-size: 40px; font-weight: bold; padding: 8px 26px; border-radius: 44px; }
 .status.expired { background: #fdedec; color: #c0392b; }
 .status.open { background: #fef5e7; color: #b9770e; }
-.title-box { flex: 1; display: flex; align-items: center; min-height: 0; }
-h1 { font-size: 64px; line-height: 1.18; letter-spacing: -0.5px; }
-.bottom { display: flex; flex-direction: column; gap: 16px; }
-.who { font-size: 28px; color: #e8f1f8; }
+.who { font-size: 40px; line-height: 1.2; color: #fff; }
+.who b { font-weight: bold; }
+.who span { color: #d6e8f6; }
 .tags { display: flex; gap: 12px; flex-wrap: wrap; }
-.tag { font-size: 22px; padding: 6px 18px; border-radius: 30px; background: rgba(255,255,255,.18); }
+.tag { font-size: 28px; padding: 4px 18px; border-radius: 30px; background: rgba(255,255,255,.18); }
 </style></head><body>
-<div class="top">
-  <div class="brand">
+<div class="brand">
     <svg width="44" height="44" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="rgba(255,255,255,.15)"/>
       <path d="M19 13h26M19 51h26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
       <path d="M23 13h18L32 32l9 19H23l9-19z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"/>
       <path d="M26 21h12l-6 9z" fill="#fff"/><path d="M32 40l6 9H26z" fill="#7fc4f2"/></svg>
     <span>Wikiprev <small>· Archivio di previsioni</small></span>
-  </div>
-  ${status ? `<div class="status ${f.expired ? 'expired' : 'open'}">${esc(status)}</div>` : ''}
 </div>
 <div class="title-box"><h1 id="t">${esc(f.title)}</h1></div>
 <div class="bottom">
-  ${f.person || f.outlet ? `<div class="who">${esc([f.person, f.outlet ? 'Fonte: ' + f.outlet : ''].filter(Boolean).join(' · '))}</div>` : ''}
+  ${status ? `<div class="status ${f.expired ? 'expired' : 'open'}">${esc(status)}</div>` : ''}
+  ${f.person || f.outlet ? `<div class="who">${f.person ? `<b>${esc(f.person)}</b>` : ''}${f.person && f.outlet ? ' · ' : ''}${f.outlet ? `<span>Fonte: ${esc(f.outlet)}</span>` : ''}</div>` : ''}
   ${f.tags.length ? `<div class="tags">${f.tags.map(t => `<span class="tag"># ${esc(t)}</span>`).join('')}</div>` : ''}
 </div>
 <script>
-  // Shrink the title until it fits its box.
-  const t = document.getElementById('t'), box = t.parentElement;
-  let size = 64;
-  while ((t.scrollHeight > box.clientHeight || t.scrollWidth > box.clientWidth) && size > 30) {
-    size -= 2; t.style.fontSize = size + 'px';
-  }
+  // Shrink the title until it fits its box. Wrapped in a function: the same
+  // browser page draws every image, so top-level names would clash.
+  (function () {
+    var t = document.getElementById('t'), box = t.parentElement, size = 64;
+    while ((t.scrollHeight > box.clientHeight || t.scrollWidth > box.clientWidth) && size > 28) {
+      size -= 2; t.style.fontSize = size + 'px';
+    }
+  })();
 </script>
 </body></html>`;
 }
