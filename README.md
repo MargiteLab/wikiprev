@@ -3,14 +3,14 @@
 Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriva la loro scadenza.
 
 ## Funzionalità
-- Aggiunta di previsioni con autore, fonte, link, categoria, data della previsione e scadenza
-- Ricerca, filtro per categoria e per intervallo di scadenza, ordinamento
-- In evidenza la previsione con la scadenza più vicina, con priorità a quelle appena scadute
+- Aggiunta di previsioni con autore, fonte, link, uno o più tag, data della previsione e scadenza
+- Ricerca, filtro per tag e per intervallo di scadenza, ordinamento (predefinito: inserite di recente)
+- In evidenza due previsioni: a sinistra l'ultima scaduta, a destra la prossima in scadenza, con pulsanti per andare più indietro o più avanti nel tempo
+- Ogni previsione ha una sua pagina (`?p=<id>`) con tutti i dettagli, un link da copiare o condividere e le copie archiviate della fonte su archive.org
 - Nessun accesso con email: per aggiungere una previsione basta scrivere il proprio nome
 - Per ogni previsione si sa chi l'ha caricata
 - Solo l'amministratore, con un codice segreto, può eliminare le previsioni
-- Nuove categorie si aggiungono direttamente dal modulo ("+ Nuova categoria…")
-- Oltre alla categoria, ogni previsione può avere più etichette (es. "Promesse politiche"), selezionabili insieme; nuove etichette si creano dal modulo
+- Tag: ogni previsione ne ha almeno uno e può averne più di uno (es. "Economia", "TAV", "Promesse politiche"); nuovi tag si creano dal modulo. Fino a novembre 2026 c'erano "categorie" separate: sono diventate tag (migrazione 0013)
 - Ogni previsione mostra quando è stata inserita e da chi
 - Contatore delle visite, visibile all'amministratore nel riquadro Amministrazione (senza cookie, senza IP)
 
@@ -27,7 +27,7 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 index.html                    struttura della pagina
 css/style.css                 stili
 js/config.js                  indirizzo e chiave pubblica di Supabase
-js/model.js                   categorie predefinite e validazione
+js/model.js                   tag predefiniti e validazione
 js/store-supabase.js          dati condivisi su Supabase
 js/store-local.js             dati nel browser (modalità locale)
 js/store.js                   sceglie la modalità
@@ -46,8 +46,8 @@ Tabelle principali:
 | `profiles` | account con email (per ora non usati, pronti per un accesso futuro) |
 | `people` | chi fa le previsioni: persone, organizzazioni, gruppi |
 | `outlets` | dove sono state pubblicate (testate, siti, programmi) |
-| `categories` | le categorie (si aggiungono anche dal sito; si rinominano o eliminano dal Table Editor) |
-| `predictions` | le previsioni, collegate a persona, fonte, categoria e utente; `created_at` è la data di inserimento |
+| `categories` | le vecchie categorie, conservate come storia: dalla migrazione 0013 sono tag |
+| `predictions` | le previsioni, collegate a persona, fonte e utente; `created_at` è la data di inserimento; `category_id` resta solo come storia |
 | `tags`, `prediction_tags` | le etichette e quali previsioni le hanno (più etichette per previsione) |
 | `prediction_history` | ogni inserimento e modifica, con la riga completa |
 
@@ -76,6 +76,7 @@ Regole per non perdere dati:
    10. `0010_wrong_predictions_2021_2024.sql`
    11. `0011_visit_counter.sql`
    12. `0012_bdi_ai_bonds_2026.sql`
+   13. `0013_categories_become_tags.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');

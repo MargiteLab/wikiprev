@@ -1,5 +1,6 @@
 /*
- * WikiPrev UI: renders predictions, handles filters and the "add" form.
+ * WikiPrev UI: featured predictions, list and filters, the "add" form and the
+ * single-prediction page (address ?p=<id>).
  * All data access goes through window.WikiPrevStore (js/store.js).
  *
  * User-provided text is always inserted with textContent, never innerHTML.
@@ -8,9 +9,7 @@
     'use strict';
 
     var store = window.WikiPrevStore;
-    var CATEGORIES = window.WikiPrevModel.DEFAULT_CATEGORIES;
     var TAGS = window.WikiPrevModel.DEFAULT_TAGS;
-    var featuredId = null;
     var items = [];        // predictions currently loaded from the store
     var started = false;   // true once the main view has been set up
 
@@ -104,8 +103,19 @@
         return parts[2] + '/' + parts[1] + '/' + parts[0];
     }
 
-    function categoryOf(p) {
-        return CATEGORIES[p.category] || { label: p.category, icon: 'fa-tag' };
+    /* Link to a prediction's own page. */
+    function predictionUrl(id) {
+        return window.location.pathname + '?p=' + encodeURIComponent(id);
+    }
+
+    function predictionAbsoluteUrl(id) {
+        return window.location.origin + predictionUrl(id);
+    }
+
+    function tagChips(p) {
+        return (p.tags || []).map(function (t) {
+            return el('span', { className: 'tag t-' + t.id, title: 'Tag' }, [icon('fas ' + (t.icon || 'fa-hashtag')), ' ' + t.label]);
+        });
     }
 
     function sourceNode(p) {
@@ -116,26 +126,17 @@
     }
 
     function metaTags(p) {
-        var cat = categoryOf(p);
         return el('div', { className: 'prediction-meta' }, [
             el('span', { className: 'tag', title: 'Da verificare entro il' }, [
                 icon('far fa-calendar'), ' Scadenza: ' + formatDate(p.dueDate)
             ]),
             p.madeOn ? el('span', { className: 'tag', title: 'Data della previsione' }, [
                 icon('far fa-clock'), ' Fatta il: ' + formatDate(p.madeOn)
-            ]) : null,
-            el('span', { className: 'tag ' + p.category }, [
-                icon('fas ' + cat.icon), ' ' + cat.label
-            ])
-        ].concat((p.tags || []).map(function (t) {
-            return el('span', { className: 'tag label-tag', title: 'Etichetta' }, [icon('fas fa-hashtag'), ' ' + t.label]);
-        })));
+            ]) : null
+        ].concat(tagChips(p)));
     }
 
-    /* ---------- Featured prediction ---------- */
-
-    // A prediction counts as "just expired" for this many days after its due date.
-    var RECENTLY_EXPIRED_DAYS = 30;
+    /* ---------- Featured predictions ---------- */
 
     function todayIso() {
         var d = new Date();
@@ -146,77 +147,98 @@
         return Math.round((Date.parse(toIso) - Date.parse(fromIso)) / 86400000);
     }
 
-    /* Order in which predictions are featured:
-     * 1. expired in the last RECENTLY_EXPIRED_DAYS days, most recent first;
-     * 2. not yet expired (due today or later), soonest first;
-     * 3. expired longer ago, most recent first;
-     * 4. without a due date. */
-    function featuredOrder(list) {
-        var today = todayIso();
-        var recent = [], upcoming = [], older = [], undated = [];
-        list.forEach(function (p) {
-            if (!p.dueDate) undated.push(p);
-            else if (p.dueDate >= today) upcoming.push(p);
-            else if (daysBetween(p.dueDate, today) <= RECENTLY_EXPIRED_DAYS) recent.push(p);
-            else older.push(p);
-        });
-        var asc = function (a, b) { return a.dueDate.localeCompare(b.dueDate); };
-        var desc = function (a, b) { return b.dueDate.localeCompare(a.dueDate); };
-        return recent.sort(desc).concat(upcoming.sort(asc), older.sort(desc), undated);
+    /* "12 giorni", "circa 5 mesi", "circa 10 anni" */
+    function humanSpan(days) {
+        if (days < 60) return days + ' giorni';
+        if (days < 730) return 'circa ' + Math.round(days / 30.44) + ' mesi';
+        return 'circa ' + Math.round(days / 365.25) + ' anni';
     }
 
-    /* "Scade tra 12 giorni", "Scaduta da 3 giorni", ... */
+    /* "Scade tra 12 giorni", "Scaduta da circa 3 mesi", ... */
     function dueStatus(p) {
         if (!p.dueDate) return null;
         var days = daysBetween(todayIso(), p.dueDate);
         if (days === 0) return { text: 'Scade oggi', expired: false };
         if (days === 1) return { text: 'Scade domani', expired: false };
-        if (days > 1) return { text: 'Scade tra ' + days + ' giorni', expired: false };
+        if (days > 1) return { text: 'Scade tra ' + humanSpan(days), expired: false };
         if (days === -1) return { text: 'Scaduta ieri', expired: true };
-        return { text: 'Scaduta da ' + (-days) + ' giorni', expired: true };
+        return { text: 'Scaduta da ' + humanSpan(-days), expired: true };
     }
 
-    function firstFeatured() {
-        return featuredOrder(all())[0] || null;
+    function statusBadge(p) {
+        var status = dueStatus(p);
+        if (!status) return null;
+        return el('p', { className: 'due-status' + (status.expired ? ' expired' : '') }, [
+            icon(status.expired ? 'fas fa-hourglass-end' : 'fas fa-hourglass-half'), ' ' + status.text
+        ]);
     }
 
-    function nextFeatured() {
-        var order = featuredOrder(all());
-        if (!order.length) return null;
-        var i = order.findIndex(function (p) { return p.id === featuredId; });
-        return order[(i + 1) % order.length];
+    /* Left panel: expired, most recent first. Right panel: not yet expired
+     * (due today or later), soonest first. The buttons move further away in
+     * time (older / later) or back. */
+    var featured = {
+        expired: { index: 0, title: 'Appena scaduta', empty: 'Nessuna previsione scaduta.',
+                   further: 'Scaduta prima', closer: 'Più recente' },
+        upcoming: { index: 0, title: 'In scadenza', empty: 'Nessuna previsione in scadenza.',
+                    further: 'Scade dopo', closer: 'Scade prima' }
+    };
+
+    function featuredList(kind) {
+        var today = todayIso();
+        var dated = all().filter(function (p) { return p.dueDate; });
+        if (kind === 'expired') {
+            return dated.filter(function (p) { return p.dueDate < today; })
+                .sort(function (a, b) { return b.dueDate.localeCompare(a.dueDate) || b.createdAt.localeCompare(a.createdAt); });
+        }
+        return dated.filter(function (p) { return p.dueDate >= today; })
+            .sort(function (a, b) { return a.dueDate.localeCompare(b.dueDate) || b.createdAt.localeCompare(a.createdAt); });
     }
 
-    function renderFeatured(p) {
-        var box = $('featured-prediction');
+    function renderFeaturedPanel(kind) {
+        var conf = featured[kind];
+        var list = featuredList(kind);
+        var box = $('featured-' + kind);
         box.replaceChildren();
-        if (!p) {
-            featuredId = null;
-            box.appendChild(el('p', { text: 'Ancora nessuna previsione. Aggiungi la prima qui sotto!' }));
+        box.appendChild(el('p', { className: 'featured-kicker' }, [
+            icon(kind === 'expired' ? 'fas fa-history' : 'fas fa-hourglass-half'), ' ' + conf.title
+        ]));
+        if (!list.length) {
+            box.appendChild(el('p', { className: 'featured-empty', text: conf.empty }));
             return;
         }
-        featuredId = p.id;
-        var status = dueStatus(p);
-        var total = all().length;
+        conf.index = Math.max(0, Math.min(conf.index, list.length - 1));
+        var p = list[conf.index];
         [
-            status ? el('p', { className: 'due-status' + (status.expired ? ' expired' : '') }, [
-                icon(status.expired ? 'fas fa-hourglass-end' : 'fas fa-hourglass-half'), ' ' + status.text
-            ]) : null,
-            el('h3', { text: p.title }),
+            statusBadge(p),
+            el('h3', null, el('a', { href: predictionUrl(p.id), className: 'prediction-link', 'data-id': p.id, text: p.title })),
             p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
             el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
             metaTags(p),
-            p.description ? el('p', { text: p.description }) : null,
-            el('p', { className: 'featured-inserted' }, [insertedNode(p)]),
-            total > 1 ? el('button', { type: 'button', className: 'view-all', id: 'next-featured' }, [
-                icon('fas fa-forward'), ' Mostra la successiva'
-            ]) : null
+            p.description ? el('p', { className: 'featured-description', text: p.description }) : null,
+            el('div', { className: 'featured-nav' }, [
+                el('button', { type: 'button', className: 'secondary-btn', 'data-kind': kind, 'data-step': '-1' },
+                    [icon('fas fa-chevron-left'), ' ' + conf.closer]),
+                el('span', { className: 'featured-position', text: (conf.index + 1) + ' di ' + list.length }),
+                el('button', { type: 'button', className: 'secondary-btn', 'data-kind': kind, 'data-step': '1' },
+                    [conf.further + ' ', icon('fas fa-chevron-right')])
+            ])
         ].forEach(function (node) { if (node) box.appendChild(node); });
-        if (total > 1) {
-            $('next-featured').addEventListener('click', function () {
-                renderFeatured(nextFeatured());
-            });
-        }
+        var buttons = box.querySelectorAll('.featured-nav button');
+        buttons[0].disabled = conf.index === 0;
+        buttons[1].disabled = conf.index >= list.length - 1;
+    }
+
+    function renderFeatured() {
+        renderFeaturedPanel('expired');
+        renderFeaturedPanel('upcoming');
+    }
+
+    function onFeaturedNav(event) {
+        var btn = event.target.closest('.featured-nav button');
+        if (!btn || btn.disabled) return;
+        var kind = btn.getAttribute('data-kind');
+        featured[kind].index += Number(btn.getAttribute('data-step'));
+        renderFeaturedPanel(kind);
     }
 
     /* ---------- List and filters ---------- */
@@ -224,7 +246,6 @@
     function readFilters() {
         return {
             text: $('filter-text').value.trim().toLowerCase(),
-            category: $('filter-category').value,
             tag: $('filter-tag').value,
             from: $('filter-from').value,
             to: $('filter-to').value,
@@ -234,7 +255,6 @@
 
     function applyFilters(list, f) {
         var result = list.filter(function (p) {
-            if (f.category && p.category !== f.category) return false;
             if (f.tag && !(p.tags || []).some(function (t) { return t.id === f.tag; })) return false;
             if (f.from && (!p.dueDate || p.dueDate < f.from)) return false;
             if (f.to && (!p.dueDate || p.dueDate > f.to)) return false;
@@ -246,7 +266,8 @@
             return true;
         });
 
-        var byCreated = function (a, b) { return a.createdAt.localeCompare(b.createdAt); };
+        // Same insertion time (e.g. examples added together): keep a stable order.
+        var byCreated = function (a, b) { return a.createdAt.localeCompare(b.createdAt) || String(a.id).localeCompare(String(b.id)); };
         // Predictions without a due date always go last.
         var byDue = function (a, b) {
             if (!a.dueDate) return b.dueDate ? 1 : 0;
@@ -269,7 +290,7 @@
     function card(p) {
         return el('article', { className: 'prediction-card' }, [
             el('div', { className: 'card-content' }, [
-                el('h3', { text: p.title }),
+                el('h3', null, el('a', { href: predictionUrl(p.id), className: 'prediction-link', 'data-id': p.id, text: p.title })),
                 p.author ? el('p', { className: 'author' }, [icon('fas fa-user'), ' ' + p.author]) : null,
                 el('p', { className: 'source' }, ['Fonte: ', sourceNode(p)]),
                 metaTags(p),
@@ -324,7 +345,7 @@
         event.preventDefault();
         var form = event.target;
         var input = {};
-        ['contributor', 'title', 'author', 'source', 'url', 'category', 'madeOn', 'dueDate', 'description']
+        ['contributor', 'title', 'author', 'source', 'url', 'madeOn', 'dueDate', 'description']
             .forEach(function (name) { input[name] = form.elements[name].value; });
         input.tags = selectedTags();
 
@@ -333,19 +354,6 @@
         showMessage('Salvataggio…');
         var result;
         try {
-            if (input.category === NEW_CATEGORY) {
-                var created = await store.addCategory($('newCategory').value);
-                if (!created.ok) {
-                    submit.disabled = false;
-                    showMessage(created.error, 'error');
-                    return;
-                }
-                CATEGORIES = await store.categories();
-                fillCategorySelects();
-                $('category').value = created.id;
-                toggleNewCategory();
-                input.category = created.id;
-            }
             result = await store.add(input);
         } catch (e) {
             result = { ok: false, errors: [e.message] };
@@ -363,14 +371,13 @@
         fillTagFilter();
         saveName(input.contributor.trim());
         form.reset();
-        toggleNewCategory();
         $('contributor').value = input.contributor.trim();
         showMessage(result.saved
             ? 'Previsione aggiunta.'
             : 'Previsione aggiunta, ma non è stato possibile salvarla in questo browser: andrà persa ricaricando la pagina.',
             result.saved ? 'success' : 'error');
         renderList();
-        renderFeatured(firstFeatured());
+        renderFeatured();
     }
 
     async function onDelete(event) {
@@ -406,36 +413,11 @@
         }
         items = items.filter(function (p) { return p.id !== id; });
         renderList();
-        renderFeatured(id === featuredId ? firstFeatured() : all().find(function (p) { return p.id === featuredId; }));
+        renderFeatured();
+        if (currentDetailId() === id) goHome();
     }
 
     /* ---------- Setup ---------- */
-
-    var NEW_CATEGORY = '__new__';
-
-    function fillCategorySelects() {
-        ['filter-category', 'category'].forEach(function (selectId) {
-            var select = $(selectId);
-            var current = select.value;
-            // Keep the first, "empty" option and rebuild the rest.
-            while (select.options.length > 1) select.remove(1);
-            Object.keys(CATEGORIES).forEach(function (key) {
-                select.appendChild(el('option', { value: key, text: CATEGORIES[key].label }));
-            });
-            if (selectId === 'category') {
-                select.appendChild(el('option', { value: NEW_CATEGORY, text: '+ Nuova categoria…' }));
-            }
-            select.value = current;
-            if (select.value !== current) select.value = '';
-        });
-        toggleNewCategory();
-    }
-
-    function toggleNewCategory() {
-        var isNew = $('category').value === NEW_CATEGORY;
-        $('new-category-group').hidden = !isNew;
-        if (!isNew) $('newCategory').value = '';
-    }
 
     /* ---------- Tags ---------- */
 
@@ -531,11 +513,22 @@
         $('newTag').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') { e.preventDefault(); addTypedTag(); }
         });
-        $('category').addEventListener('change', function () {
-            toggleNewCategory();
-            if (!$('new-category-group').hidden) $('newCategory').focus();
-        });
         $('predictions-grid').addEventListener('click', onDelete);
+        $('detail-card').addEventListener('click', onDelete);
+        $('featured-expired').addEventListener('click', onFeaturedNav);
+        $('featured-upcoming').addEventListener('click', onFeaturedNav);
+        // Prediction titles open their page without reloading the site.
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('a.prediction-link');
+            if (!link || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            openPrediction(link.getAttribute('data-id'));
+        });
+        $('back-link').addEventListener('click', function (e) {
+            e.preventDefault();
+            goHome();
+        });
+        window.addEventListener('popstate', route);
     }
 
     /* ---------- Administrator ---------- */
@@ -550,7 +543,10 @@
             saveAdminCode('');
         }
         renderAdminPanel();
-        if (started) renderList();
+        if (started) {
+            renderList();
+            route();
+        }
     }
 
     function renderAdminPanel() {
@@ -687,6 +683,122 @@
         );
     }
 
+    /* ---------- Single prediction page ---------- */
+
+    var BASE_TITLE = document.title;
+
+    function currentDetailId() {
+        return new URLSearchParams(window.location.search).get('p');
+    }
+
+    function openPrediction(id) {
+        history.pushState({ wikiprev: true }, '', predictionUrl(id));
+        route();
+        window.scrollTo(0, 0);
+    }
+
+    function goHome() {
+        if (history.state && history.state.wikiprev) {
+            history.back();   // back to where the visitor came from in the archive
+        } else {
+            history.pushState({}, '', window.location.pathname);
+            route();
+        }
+    }
+
+    function detailRow(label, value) {
+        if (!value) return null;
+        return el('div', { className: 'detail-row' }, [el('dt', { text: label }), el('dd', null, value)]);
+    }
+
+    async function copyText(text, button) {
+        var done = function (ok) {
+            var original = button.getAttribute('data-label');
+            button.replaceChildren(icon(ok ? 'fas fa-check' : 'fas fa-exclamation-triangle'),
+                ok ? ' Link copiato' : ' Copia non riuscita: seleziona il link a mano');
+            setTimeout(function () { button.replaceChildren(icon('fas fa-link'), ' ' + original); }, 2500);
+        };
+        try {
+            await navigator.clipboard.writeText(text);
+            done(true);
+        } catch (e) {
+            var input = $('share-url');
+            input.focus();
+            input.select();
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+            done(ok);
+        }
+    }
+
+    function renderDetail(p) {
+        var card = $('detail-card');
+        card.replaceChildren();
+        if (!p) {
+            document.title = 'Previsione non trovata - ' + BASE_TITLE;
+            card.append(el('h2', { text: 'Previsione non trovata' }),
+                el('p', { text: 'Il link potrebbe essere sbagliato, oppure la previsione è stata eliminata.' }));
+            return;
+        }
+        document.title = p.title + ' - Wikiprev';
+        var link = predictionAbsoluteUrl(p.id);
+        var sourceValue = [sourceNode(p)];
+        if (p.url) {
+            sourceValue.push(el('div', { className: 'source-preview' }, [
+                el('span', { className: 'source-host' }, [icon('fas fa-globe'), ' ' + new URL(p.url).hostname.replace(/^www\./, '')]),
+                el('a', { href: 'https://web.archive.org/web/*/' + p.url, target: '_blank', rel: 'noopener noreferrer' },
+                    [icon('fas fa-archive'), ' Copie archiviate (archive.org)'])
+            ]));
+        }
+        var shareButtons = [
+            el('button', { type: 'button', className: 'secondary-btn', id: 'copy-link', 'data-label': 'Copia link' }, [icon('fas fa-link'), ' Copia link'])
+        ];
+        if (navigator.share) {
+            shareButtons.push(el('button', { type: 'button', className: 'secondary-btn', id: 'native-share' }, [icon('fas fa-share-alt'), ' Condividi']));
+        }
+        [
+            statusBadge(p),
+            el('h2', { className: 'detail-title', text: p.title }),
+            el('div', { className: 'prediction-meta' }, tagChips(p)),
+            p.description ? el('p', { className: 'detail-description', text: p.description }) : null,
+            el('dl', { className: 'detail-list' }, [
+                detailRow("Chi l'ha fatta", p.author),
+                detailRow('Fonte', sourceValue),
+                detailRow('Data della previsione', p.madeOn ? formatDate(p.madeOn) : ''),
+                detailRow('Da verificare entro il', formatDate(p.dueDate)),
+                detailRow('Inserita', formatInserted(p.createdAt) + (p.createdByName ? ' da ' + p.createdByName : ''))
+            ].filter(Boolean)),
+            el('div', { className: 'share-box' }, [
+                el('label', { for: 'share-url', text: 'Link a questa previsione' }),
+                el('div', { className: 'share-row' }, [
+                    el('input', { type: 'text', id: 'share-url', readonly: 'readonly', value: link })
+                ].concat(shareButtons))
+            ]),
+            canDelete() ? el('div', { className: 'card-actions' }, [el('span'), el('button', {
+                type: 'button', className: 'delete-btn', 'data-id': p.id, 'aria-label': 'Elimina la previsione', title: 'Elimina'
+            }, [icon('fas fa-trash-alt'), ' Elimina'])]) : null
+        ].forEach(function (node) { if (node) card.appendChild(node); });
+        $('share-url').addEventListener('focus', function (e) { e.target.select(); });
+        $('copy-link').addEventListener('click', function (e) { copyText(link, e.currentTarget); });
+        if (navigator.share) {
+            $('native-share').addEventListener('click', function () {
+                navigator.share({ title: p.title, text: p.title, url: link }).catch(function () { /* cancelled */ });
+            });
+        }
+    }
+
+    /* Show the archive or a single prediction, depending on the address. */
+    function route() {
+        var id = currentDetailId();
+        $('home-view').hidden = Boolean(id);
+        $('detail-view').hidden = !id;
+        if (!id) {
+            document.title = BASE_TITLE;
+            return;
+        }
+        renderDetail(items.find(function (p) { return String(p.id) === id; }) || null);
+    }
+
     /* ---------- Views: loading/error and main ---------- */
 
     function showView(name) {
@@ -703,7 +815,6 @@
     async function showMain() {
         showStatus('Caricamento delle previsioni…');
         try {
-            CATEGORIES = await store.categories();
             TAGS = await store.tags();
             items = await store.list();
         } catch (e) {
@@ -711,16 +822,14 @@
             return;
         }
         await restoreAdmin();
-        fillCategorySelects();
         renderTagOptions([]);
         fillTagFilter();
-        $('tag-picker').hidden = !store.supportsTags();
-        $('filter-tag-field').hidden = !store.supportsTags();
         fillSuggestions();
         setupMainView();
-        renderFeatured(firstFeatured());
+        renderFeatured();
         renderList();
         showView('main');
+        route();
     }
 
     document.addEventListener('DOMContentLoaded', function () {

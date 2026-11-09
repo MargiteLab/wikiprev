@@ -19,14 +19,11 @@
         var fail = function () { return Promise.reject(failure); };
         global.WikiPrevStore = {
             mode: 'supabase',
-            categories: fail,
             list: fail,
             add: fail,
             remove: fail,
             checkAdminCode: fail,
-            addCategory: fail,
             tags: fail,
-            supportsTags: function () { return false; },
             logVisit: function () { return Promise.resolve(); }
         };
     }

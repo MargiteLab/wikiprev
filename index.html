@@ -30,9 +30,9 @@
                 <span>WikiPrev</span>
             </div>
             <ul class="nav-links">
-                <li><a href="#featured">In evidenza</a></li>
-                <li><a href="#archive">Archivio</a></li>
-                <li><a href="#add">Aggiungi una previsione</a></li>
+                <li><a href="./#featured">In evidenza</a></li>
+                <li><a href="./#archive">Archivio</a></li>
+                <li><a href="./#add">Aggiungi una previsione</a></li>
             </ul>
             <button class="mobile-menu-btn" aria-label="Apri il menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
@@ -42,8 +42,7 @@
 
     <main class="container">
         <section class="hero">
-            <h1>WikiPrev - Archivio di previsioni verificabili</h1>
-            <p>Raccogli le previsioni, verifica come sono andate e non dimenticare mai di controllare cosa era stato promesso</p>
+            <h1>Wikiprev - Archivio di previsioni</h1>
         </section>
 
         <p class="local-mode-banner" id="local-mode-banner" hidden>
@@ -57,14 +56,29 @@
 
         <div id="app-content" hidden>
 
+        <!-- Single prediction page (shown when the address has ?p=<id>) -->
+        <section class="detail-view" id="detail-view" hidden>
+            <a href="./" class="back-link" id="back-link"><i class="fas fa-arrow-left"></i> Torna all'archivio</a>
+            <article class="detail-card" id="detail-card">
+                <!-- Filled by js/app.js -->
+            </article>
+        </section>
+
+        <div id="home-view">
+
         <div class="section-title" id="featured">
             <i class="fas fa-star"></i>
-            <h2>Previsione in evidenza</h2>
+            <h2>In evidenza</h2>
         </div>
 
-        <section class="random-prediction" id="featured-prediction">
-            <!-- Filled by js/app.js -->
-        </section>
+        <div class="featured-grid">
+            <section class="random-prediction featured-panel expired" id="featured-expired" aria-label="Previsione appena scaduta">
+                <!-- Filled by js/app.js -->
+            </section>
+            <section class="random-prediction featured-panel upcoming" id="featured-upcoming" aria-label="Prossima previsione in scadenza">
+                <!-- Filled by js/app.js -->
+            </section>
+        </div>
 
         <div class="section-title" id="archive">
             <i class="fas fa-filter"></i>
@@ -75,20 +89,13 @@
             <form class="filter-form" id="filter-form">
                 <div class="field">
                     <label for="filter-text">Cerca</label>
-                    <input type="search" id="filter-text" placeholder="Titolo, autore, fonte…">
+                    <input type="search" id="filter-text" placeholder="Titolo, autore, fonte, tag…">
                 </div>
 
                 <div class="field">
-                    <label for="filter-category">Categoria</label>
-                    <select id="filter-category">
-                        <option value="">Tutte le categorie</option>
-                    </select>
-                </div>
-
-                <div class="field" id="filter-tag-field">
-                    <label for="filter-tag">Etichetta</label>
+                    <label for="filter-tag">Tag</label>
                     <select id="filter-tag">
-                        <option value="">Tutte le etichette</option>
+                        <option value="">Tutti i tag</option>
                     </select>
                 </div>
 
@@ -168,39 +175,26 @@
                     <input type="url" id="url" name="url" placeholder="https://… (facoltativo)">
                 </div>
 
+                <fieldset class="form-group tag-picker" id="tag-picker">
+                    <legend>Tag <span class="required">*</span></legend>
+                    <div class="tag-options" id="tag-options"></div>
+                    <div class="new-tag-row">
+                        <input type="text" id="newTag" maxlength="40" placeholder="Nuovo tag, es. Campagna elettorale">
+                        <button type="button" id="add-tag-btn" class="secondary-btn"><i class="fas fa-plus"></i> Aggiungi</button>
+                    </div>
+                    <p class="field-hint">Scegline almeno uno; puoi selezionarne più di uno. I nuovi tag saranno disponibili per tutti.</p>
+                </fieldset>
+
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="category">Categoria <span class="required">*</span></label>
-                        <select id="category" name="category" required>
-                            <option value="">Scegli una categoria</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="new-category-group" hidden>
-                        <label for="newCategory">Nome della nuova categoria <span class="required">*</span></label>
-                        <input type="text" id="newCategory" maxlength="40" placeholder="Es. Sanità">
-                        <p class="field-hint">Sarà disponibile per tutti. Se esiste già una categoria con questo nome, verrà usata quella.</p>
-                    </div>
-
                     <div class="form-group">
                         <label for="madeOn">Data della previsione</label>
                         <input type="date" id="madeOn" name="madeOn">
                     </div>
-                </div>
 
-                <fieldset class="form-group tag-picker" id="tag-picker">
-                    <legend>Etichette</legend>
-                    <div class="tag-options" id="tag-options"></div>
-                    <div class="new-tag-row">
-                        <input type="text" id="newTag" maxlength="40" placeholder="Nuova etichetta, es. Campagna elettorale">
-                        <button type="button" id="add-tag-btn" class="secondary-btn"><i class="fas fa-plus"></i> Aggiungi</button>
+                    <div class="form-group">
+                        <label for="dueDate">Da verificare entro il <span class="required">*</span></label>
+                        <input type="date" id="dueDate" name="dueDate" required>
                     </div>
-                    <p class="field-hint">Puoi selezionarne quante vuoi, oppure nessuna. Le nuove etichette saranno disponibili per tutti.</p>
-                </fieldset>
-
-                <div class="form-group">
-                    <label for="dueDate">Da verificare entro il <span class="required">*</span></label>
-                    <input type="date" id="dueDate" name="dueDate" required>
                 </div>
 
                 <div class="form-group">
@@ -216,6 +210,8 @@
             <datalist id="outlets-list"></datalist>
             <datalist id="contributors-list"></datalist>
         </section>
+
+        </div><!-- /home-view -->
 
         <section class="admin-panel" id="admin-panel" hidden>
             <h2><i class="fas fa-user-shield"></i> Amministrazione</h2>
@@ -248,9 +244,9 @@
         <div class="footer-content">
             <p>WikiPrev - Archivio di previsioni verificabili</p>
             <ul class="footer-links">
-                <li><a href="#featured">In evidenza</a></li>
-                <li><a href="#archive">Archivio</a></li>
-                <li><a href="#add">Aggiungi una previsione</a></li>
+                <li><a href="./#featured">In evidenza</a></li>
+                <li><a href="./#archive">Archivio</a></li>
+                <li><a href="./#add">Aggiungi una previsione</a></li>
                 <li id="admin-link-item" hidden><a href="#admin-panel" id="admin-link">Amministrazione</a></li>
             </ul>
             <p>Software libero con licenza GNU GPL v3</p>

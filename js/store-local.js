@@ -4,8 +4,9 @@
  * e.g. for quick previews. Same asynchronous interface as store-supabase.js.
  *
  * Stored format: { version: 1, seedVersion: N, predictions: [...],
- *                 categories: { id: { label, icon } },    (categories added here)
- *                 tags: { id: { label } } }               (tags added here)
+ *                 tags: { id: { label, icon } } }   (tags added here)
+ * Older data with a single "category" per prediction (and custom
+ * "categories") is converted to tags when loaded.
  */
 (function (global) {
     'use strict';
@@ -14,10 +15,10 @@
     var SCHEMA_VERSION = 1;
 
     var model = global.WikiPrevModel;
-    var CATEGORIES = Object.assign({}, model.DEFAULT_CATEGORIES);
-    var customCategories = {};
-    var TAGS = Object.assign({}, model.DEFAULT_TAGS);
+    var TAGS = {};
+    Object.keys(model.DEFAULT_TAGS).forEach(function (id) { TAGS[id] = Object.assign({}, model.DEFAULT_TAGS[id]); });
     var customTags = {};
+    var legacyCustomCategories = {};   // id -> label, from data saved before categories became tags
     var str = model.str;
     var isValidDate = model.isValidDate;
     var isValidUrl = model.isValidUrl;
@@ -97,7 +98,20 @@
             if (!t || typeof t.id !== 'string' || !str(t.label) || seen[t.id]) return false;
             seen[t.id] = true;
             return true;
-        }).map(function (t) { return { id: t.id, label: str(t.label) }; });
+        }).map(function (t) {
+            return { id: t.id, label: str(t.label), icon: str(t.icon) || (TAGS[t.id] && TAGS[t.id].icon) || 'fa-hashtag' };
+        });
+    }
+
+    /* The tag an old single category became. */
+    function tagForCategory(category) {
+        var legacy = model.LEGACY_CATEGORY_TAGS[category];
+        if (legacy) return { id: legacy.id, label: legacy.label, icon: legacy.icon };
+        if (legacyCustomCategories[category]) {
+            var id = tagIdFor(legacyCustomCategories[category]);
+            return { id: id, label: TAGS[id].label, icon: TAGS[id].icon };
+        }
+        return null;
     }
 
     function normalize(raw) {
@@ -108,7 +122,6 @@
             author: str(raw.author),
             source: str(raw.source),
             url: str(raw.url),
-            category: str(raw.category),
             madeOn: str(raw.madeOn),
             dueDate: str(raw.dueDate || raw.expiry),
             description: str(raw.description),
@@ -117,7 +130,10 @@
             tags: normalizeTags(raw.tags)
         };
         if (!p.title) return null;
-        if (!CATEGORIES[p.category]) p.category = 'politics';
+        var fromCategory = str(raw.category) && tagForCategory(str(raw.category));
+        if (fromCategory && !p.tags.some(function (t) { return t.label.toLowerCase() === fromCategory.label.toLowerCase(); })) {
+            p.tags.unshift(fromCategory);
+        }
         if (p.url && !isValidUrl(p.url)) p.url = '';
         if (p.madeOn && !isValidDate(p.madeOn)) p.madeOn = '';
         if (!isValidDate(p.dueDate)) p.dueDate = '';
@@ -493,10 +509,7 @@
         if (stored && typeof stored === 'object') {
             Object.keys(stored).forEach(function (id) {
                 var c = stored[id];
-                if (/^[a-z][a-z0-9-]*$/.test(id) && c && str(c.label)) {
-                    customCategories[id] = { label: str(c.label), icon: 'fa-tag' };
-                    CATEGORIES[id] = customCategories[id];
-                }
+                if (c && str(c.label)) legacyCustomCategories[id] = str(c.label);
             });
         }
         var storedTags = data && !Array.isArray(data) && data.tags;
@@ -504,7 +517,7 @@
             Object.keys(storedTags).forEach(function (id) {
                 var t = storedTags[id];
                 if (/^[a-z][a-z0-9-]*$/.test(id) && t && str(t.label)) {
-                    customTags[id] = { label: str(t.label) };
+                    customTags[id] = { label: str(t.label), icon: str(t.icon) || 'fa-hashtag' };
                     TAGS[id] = customTags[id];
                 }
             });
@@ -521,7 +534,6 @@
                 version: SCHEMA_VERSION,
                 seedVersion: SEED_VERSION,
                 predictions: predictions,
-                categories: customCategories,
                 tags: customTags
             }));
             return true;
@@ -532,7 +544,7 @@
 
 
     function add(input) {
-        var errors = model.validate(input, CATEGORIES);
+        var errors = model.validate(input);
         if (errors.length) return { ok: false, errors: errors };
         var p = normalize({
             id: newId(),
@@ -540,7 +552,6 @@
             author: input.author,
             source: input.source,
             url: input.url,
-            category: input.category,
             madeOn: input.madeOn,
             dueDate: input.dueDate,
             description: input.description,
@@ -548,7 +559,7 @@
             createdByName: input.contributor,
             tags: (input.tags || []).map(function (label) {
                 var id = tagIdFor(label);
-                return { id: id, label: TAGS[id].label };
+                return { id: id, label: TAGS[id].label, icon: TAGS[id].icon };
             })
         });
         predictions.push(p);
@@ -564,21 +575,6 @@
 
     if (loaded.changed) save();
 
-    function addCategory(label) {
-        var error = model.categoryLabelError(label);
-        if (error) return { ok: false, error: error };
-        var clean = str(label).replace(/\s+/g, ' ');
-        var existing = Object.keys(CATEGORIES).filter(function (id) {
-            return CATEGORIES[id].label.toLowerCase() === clean.toLowerCase();
-        })[0];
-        if (existing) return { ok: true, id: existing };
-        var id = model.categoryIdFor(clean, CATEGORIES);
-        customCategories[id] = { label: clean, icon: 'fa-tag' };
-        CATEGORIES[id] = customCategories[id];
-        save();
-        return { ok: true, id: id };
-    }
-
     /* Find a tag by name ignoring case, creating it if needed. */
     function tagIdFor(label) {
         var clean = str(label).replace(/\s+/g, ' ');
@@ -586,8 +582,8 @@
             return TAGS[id].label.toLowerCase() === clean.toLowerCase();
         })[0];
         if (existing) return existing;
-        var id = model.categoryIdFor(clean, TAGS, 'tag');
-        customTags[id] = { label: clean };
+        var id = model.tagIdFor(clean, TAGS);
+        customTags[id] = { label: clean, icon: 'fa-hashtag' };
         TAGS[id] = customTags[id];
         return id;
     }
@@ -604,13 +600,10 @@
         mode: 'local',
         needsAdminCode: false,
         checkAdminCode: function () { return resolved(true); },
-        categories: function () { return resolved(Object.assign({}, CATEGORIES)); },
-        addCategory: function (label) { return resolved(addCategory(label)); },
         tags: function () { return resolved(Object.assign({}, TAGS)); },
-        supportsTags: function () { return true; },
         logVisit: function () { return resolved(); },
         list: function () { return resolved(all()); },
         add: function (input) { return resolved(add(input)); },
-        remove: function (id) { remove(id); return resolved({ ok: true }); },
+        remove: function (id) { remove(id); return resolved({ ok: true }); }
     };
 })(window);
