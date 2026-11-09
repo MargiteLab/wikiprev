@@ -29,9 +29,9 @@ import { createRequire } from 'node:module';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'https://margitelab.github.io/wikiprev/';
-const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png?v=2';
+const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png?v=3';
 const OUT_DIR = join(ROOT, 'p');
-const IMAGE_TEMPLATE_VERSION = 2;   // bump to redraw every image
+const IMAGE_TEMPLATE_VERSION = 3;   // bump to redraw every image
 
 function readConfig() {
     const text = readFileSync(join(ROOT, 'js', 'config.js'), 'utf8');
@@ -97,53 +97,83 @@ function imageHash(f) {
 
 /* ---------- Preview image ---------- */
 
+const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio',
+    'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+
+function longDate(dmy) {
+    const [d, m, y] = dmy.split('/');
+    return `${Number(d)} ${MONTHS[Number(m) - 1] || m} ${y}`;
+}
+
+/* Fonts and the hourglass picture are embedded in the image page, so the
+   result does not depend on the fonts installed where the script runs. */
+let assetCss = null;
+function assets() {
+    if (assetCss !== null) return assetCss;
+    const dir = join(ROOT, 'scripts');
+    const b64 = file => readFileSync(join(dir, file)).toString('base64');
+    const face = (family, file, weight, style) =>
+        `@font-face { font-family: '${family}'; font-weight: ${weight}; font-style: ${style};
+  src: url(data:font/woff2;base64,${b64('fonts/' + file)}) format('woff2'); }`;
+    assetCss = [
+        face('Libre Caslon Text', 'libre-caslon-text-latin-400-normal.woff2', 400, 'normal'),
+        face('Libre Caslon Text', 'libre-caslon-text-latin-400-italic.woff2', 400, 'italic'),
+        face('Libre Caslon Text', 'libre-caslon-text-latin-700-normal.woff2', 700, 'normal'),
+        face('Source Serif 4', 'source-serif-4-latin-400-normal.woff2', 400, 'normal'),
+        face('Source Serif 4', 'source-serif-4-latin-600-normal.woff2', 600, 'normal'),
+        `.art { background-image: url(data:image/jpeg;base64,${b64('share-art.jpg')}); }`
+    ].join('\n');
+    return assetCss;
+}
+
 function imageHtml(f) {
-    const status = f.due
-        ? (f.expired ? `Scaduta il ${f.due}` : `Da verificare entro il ${f.due}`)
-        : '';
+    const badge = f.due ? (f.expired ? 'Scaduta' : 'In attesa') : '';
+    const when = f.due ? (f.expired ? 'il ' : 'entro il ') + longDate(f.due) : '';
     return `<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><style>
+${assets()}
 * { margin: 0; box-sizing: border-box; }
-body { width: 1200px; height: 630px; overflow: hidden; color: #fff;
-  font-family: 'DejaVu Sans', 'Noto Sans', 'Liberation Sans', Arial, sans-serif;
-  background: linear-gradient(135deg, #2c3e50 0%, #2f5f86 60%, #3498db 100%);
-  display: flex; flex-direction: column; padding: 44px 64px 46px; gap: 22px; }
+body { width: 1200px; height: 630px; overflow: hidden; position: relative;
+  background: #f4ede2; color: #1f1b16;
+  font-family: 'Source Serif 4', 'DejaVu Serif', Georgia, serif; }
+.art { position: absolute; right: 0; top: 0; width: 444px; height: 630px; background-size: cover; }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; background: #c4432b; }
+.content { position: absolute; left: 64px; top: 44px; bottom: 56px; width: 730px;
+  display: flex; flex-direction: column; gap: 22px; }
+.brand { display: flex; align-items: baseline; gap: 18px; padding-bottom: 16px; border-bottom: 2px solid #1f1b16; }
+.logo { font-family: 'Libre Caslon Text', Georgia, serif; font-weight: 700; font-size: 44px; letter-spacing: 1px; }
+.logo span { color: #c4432b; }
+.tagline { font-family: 'Libre Caslon Text', Georgia, serif; font-style: italic; font-size: 26px; color: #5b5047; }
 /* Text in the lower part is large on purpose: phones show the image small. */
-.brand { display: flex; align-items: center; gap: 14px; font-size: 30px; font-weight: bold; }
-.brand small { font-weight: normal; font-size: 24px; color: #cfe3f2; }
-.title-box { flex: 1; display: flex; align-items: center; min-height: 0; }
-h1 { font-size: 64px; line-height: 1.16; letter-spacing: -0.5px; }
-.bottom { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
-.status { font-size: 40px; font-weight: bold; padding: 8px 26px; border-radius: 44px; }
-.status.expired { background: #fdedec; color: #c0392b; }
-.status.open { background: #fef5e7; color: #b9770e; }
-.who { font-size: 40px; line-height: 1.2; color: #fff; }
-.who b { font-weight: bold; }
-.who span { color: #d6e8f6; }
-.tags { display: flex; gap: 12px; flex-wrap: wrap; }
-.tag { font-size: 28px; padding: 4px 18px; border-radius: 30px; background: rgba(255,255,255,.18); }
+.status { display: flex; align-items: center; gap: 18px; font-size: 36px; }
+.badge { font-size: 28px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+  padding: 6px 22px; border-radius: 40px; color: #fff; }
+.badge.expired { background: #c4432b; }
+.badge.open { background: #e2a020; color: #1f1b16; }
+.title-box { flex: 1; min-height: 0; display: flex; align-items: center; }
+h1 { font-family: 'Libre Caslon Text', Georgia, serif; font-weight: 400; font-size: 62px; line-height: 1.18; }
+.who { font-size: 38px; line-height: 1.25; }
+.who b { font-weight: 600; }
+.who span { color: #5b5047; }
 </style></head><body>
-<div class="brand">
-    <svg width="44" height="44" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="rgba(255,255,255,.15)"/>
-      <path d="M19 13h26M19 51h26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-      <path d="M23 13h18L32 32l9 19H23l9-19z" fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"/>
-      <path d="M26 21h12l-6 9z" fill="#fff"/><path d="M32 40l6 9H26z" fill="#7fc4f2"/></svg>
-    <span>Wikiprev <small>· Archivio di previsioni</small></span>
+<div class="art"></div>
+<div class="content">
+  <div class="brand"><div class="logo">WIKI<span>PREV</span></div><div class="tagline">L'archivio pubblico delle previsioni</div></div>
+  ${badge ? `<div class="status"><span class="badge ${f.expired ? 'expired' : 'open'}">${badge}</span><span>${esc(when)}</span></div>` : ''}
+  <div class="title-box"><h1 id="t">${esc(f.title)}</h1></div>
+  ${f.person || f.outlet ? `<div class="who">${f.person ? `<b>${esc(f.person)}</b>` : ''}${f.person && f.outlet ? ' · ' : ''}${f.outlet ? `<span>${esc(f.outlet)}</span>` : ''}</div>` : ''}
 </div>
-<div class="title-box"><h1 id="t">${esc(f.title)}</h1></div>
-<div class="bottom">
-  ${status ? `<div class="status ${f.expired ? 'expired' : 'open'}">${esc(status)}</div>` : ''}
-  ${f.person || f.outlet ? `<div class="who">${f.person ? `<b>${esc(f.person)}</b>` : ''}${f.person && f.outlet ? ' · ' : ''}${f.outlet ? `<span>Fonte: ${esc(f.outlet)}</span>` : ''}</div>` : ''}
-  ${f.tags.length ? `<div class="tags">${f.tags.map(t => `<span class="tag"># ${esc(t)}</span>`).join('')}</div>` : ''}
-</div>
+<div class="bar"></div>
 <script>
   // Shrink the title until it fits its box. Wrapped in a function: the same
   // browser page draws every image, so top-level names would clash.
-  (function () {
-    var t = document.getElementById('t'), box = t.parentElement, size = 64;
+  // It runs once the embedded fonts are ready, since they change the sizes.
+  document.fonts.ready.then(function () {
+    var t = document.getElementById('t'), box = t.parentElement, size = 62;
     while ((t.scrollHeight > box.clientHeight || t.scrollWidth > box.clientWidth) && size > 28) {
       size -= 2; t.style.fontSize = size + 'px';
     }
-  })();
+    document.body.setAttribute('data-ready', '1');
+  });
 </script>
 </body></html>`;
 }
@@ -225,6 +255,7 @@ for (const row of rows) {
     const upToDate = existsSync(imageFile) && existsSync(hashFile) && readFileSync(hashFile, 'utf8').trim() === hash;
     if (!upToDate && imagePage) {
         await imagePage.setContent(imageHtml(f), { waitUntil: 'load' });
+        await imagePage.waitForSelector('body[data-ready]');
         await imagePage.screenshot({ path: imageFile, type: 'jpeg', quality: 85 });
         writeFileSync(hashFile, hash + '\n');
         drawn++;
