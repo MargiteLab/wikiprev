@@ -29,7 +29,7 @@ import { createRequire } from 'node:module';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'https://margitelab.github.io/wikiprev/';
-const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png';
+const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png?v=2';
 const OUT_DIR = join(ROOT, 'p');
 const IMAGE_TEMPLATE_VERSION = 1;   // bump to redraw every image
 

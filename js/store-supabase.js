@@ -21,7 +21,12 @@
         // Old categories, used only while migration 0013 has not been applied.
         var legacyCategories = null;   // { categoryId: { label, icon } }
 
+        // True once tags have an icon column, i.e. migration 0013 has been
+        // applied: from then on old categories are ignored.
+        var categoriesMigrated = false;
+
         async function loadLegacyCategories() {
+            if (categoriesMigrated) return {};
             if (legacyCategories) return legacyCategories;
             var res = await client.from('categories').select('id, label, icon');
             legacyCategories = {};
@@ -76,6 +81,10 @@
                 if (res.error) throw new Error(describeError(res.error));
                 var map = {};
                 res.data.forEach(function (t) { map[t.id] = { label: t.label, icon: t.icon || 'fa-hashtag' }; });
+                if (res.data.some(function (t) { return 'icon' in t; })) {
+                    categoriesMigrated = true;
+                    legacyCategories = {};
+                }
                 var cats = await loadLegacyCategories();
                 Object.keys(cats).forEach(function (cid) {
                     var label = cats[cid].label;

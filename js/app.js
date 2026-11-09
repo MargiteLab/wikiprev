@@ -94,7 +94,7 @@
         var when = formatInserted(p.createdAt);
         if (!when && !p.createdByName) return el('span');
         var text = (p.createdByName ? 'Caricata da ' + p.createdByName : 'Inserita') + (when ? ' il ' + when : '');
-        return el('span', { className: 'added-by', title: 'Inserimento in WikiPrev' }, [icon('fas fa-user-edit'), ' ' + text]);
+        return el('span', { className: 'added-by', title: 'Inserimento in Wikiprev' }, [icon('fas fa-user-edit'), ' ' + text]);
     }
 
     function formatDate(iso) {
