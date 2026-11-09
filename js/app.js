@@ -89,12 +89,12 @@
             ' alle ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
 
-    /* "Caricata da Sergio il 06/11/2026 alle 18:05" (or without the name). */
+    /* "Caricata da Mario il 06/11/2026 alle 18:05" (or without the name). */
     function insertedNode(p) {
         var when = formatInserted(p.createdAt);
         if (!when && !p.createdByName) return el('span');
         var text = (p.createdByName ? 'Caricata da ' + p.createdByName : 'Inserita') + (when ? ' il ' + when : '');
-        return el('span', { className: 'added-by', title: 'Inserimento in WikiPrev' }, [icon('fas fa-user-edit'), ' ' + text]);
+        return el('span', { className: 'added-by', title: 'Inserimento in Wikiprev' }, [icon('fas fa-user-edit'), ' ' + text]);
     }
 
     function formatDate(iso) {
@@ -865,7 +865,22 @@
         route();
     }
 
+    /* Footer contact: the e-mail address is assembled only when asked for. */
+    function setupContact() {
+        var span = $('contact-email');
+        var btn = $('contact-show');
+        if (!span || !btn) return;
+        btn.addEventListener('click', function () {
+            var address = span.getAttribute('data-u') + '\u0040' + span.getAttribute('data-d');
+            var link = el('a', { href: 'mailto:' + address, text: address });
+            span.replaceChildren(link);
+            btn.remove();
+            link.focus();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        setupContact();
         // A page cached by the browser from an older version may not have the
         // elements this code expects: ask for a reload instead of hanging.
         var required = ['featured-expired', 'featured-upcoming', 'home-view', 'detail-view', 'tag-options', 'filter-tag'];

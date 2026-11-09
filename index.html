@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WikiPrev - Archivio di previsioni verificabili</title>
+    <title>Wikiprev - Archivio di previsioni</title>
     <meta name="description" content="Chi ha detto cosa, entro quando. Un archivio collaborativo di previsioni di politici, aziende ed esperti, da ricontrollare alla scadenza.">
     <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 
     <!-- Link previews (Telegram, WhatsApp, Facebook, X...). Image URLs must be absolute. -->
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="WikiPrev">
+    <meta property="og:site_name" content="Wikiprev">
     <meta property="og:locale" content="it_IT">
     <meta property="og:url" content="https://margitelab.github.io/wikiprev/">
-    <meta property="og:title" content="WikiPrev - Archivio di previsioni verificabili">
+    <meta property="og:title" content="Wikiprev - Archivio di previsioni">
     <meta property="og:description" content="Chi ha detto cosa, entro quando. Un archivio collaborativo di previsioni di politici, aziende ed esperti, da ricontrollare alla scadenza.">
-    <meta property="og:image" content="https://margitelab.github.io/wikiprev/img/anteprima.png">
+    <meta property="og:image" content="https://margitelab.github.io/wikiprev/img/anteprima.png?v=2">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="WikiPrev, archivio di previsioni verificabili">
+    <meta property="og:image:alt" content="Wikiprev, archivio di previsioni">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20261109c">
+    <link rel="stylesheet" href="css/style.css?v=20261109f">
 </head>
 <body>
     <header>
         <nav>
             <a href="./" class="logo" id="home-link" aria-label="Wikiprev, torna alla homepage">
                 <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-                <span>WikiPrev</span>
+                <span>Wikiprev</span>
             </a>
             <ul class="nav-links">
                 <li><a href="./#featured">In evidenza</a></li>
@@ -242,23 +242,30 @@
 
     <footer>
         <div class="footer-content">
-            <p>WikiPrev - Archivio di previsioni verificabili</p>
+            <p>Wikiprev - Archivio di previsioni</p>
             <ul class="footer-links">
                 <li><a href="./#featured">In evidenza</a></li>
                 <li><a href="./#archive">Archivio</a></li>
                 <li><a href="./#add">Aggiungi una previsione</a></li>
                 <li id="admin-link-item" hidden><a href="#admin-panel" id="admin-link">Amministrazione</a></li>
             </ul>
+            <p class="footer-notice">
+                <i class="fas fa-hammer" aria-hidden="true"></i>
+                Sito in costruzione, si accettano contributi di qualunque tipo -
+                <!-- The address is never written whole, so spam bots do not find it. -->
+                <span class="contact-email" id="contact-email" data-u="margite_aafh0" data-d="proton.me">margite_aafh0 [chiocciola] proton.me</span>
+                <button type="button" class="contact-btn" id="contact-show">Mostra email</button>
+            </p>
             <p>Software libero con licenza GNU GPL v3</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-    <script src="js/config.js?v=20261109c"></script>
-    <script src="js/model.js?v=20261109c"></script>
-    <script src="js/store-local.js?v=20261109c"></script>
-    <script src="js/store-supabase.js?v=20261109c"></script>
-    <script src="js/store.js?v=20261109c"></script>
-    <script src="js/app.js?v=20261109c"></script>
+    <script src="js/config.js?v=20261109f"></script>
+    <script src="js/model.js?v=20261109f"></script>
+    <script src="js/store-local.js?v=20261109f"></script>
+    <script src="js/store-supabase.js?v=20261109f"></script>
+    <script src="js/store.js?v=20261109f"></script>
+    <script src="js/app.js?v=20261109f"></script>
 </body>
 </html>

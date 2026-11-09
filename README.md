@@ -1,4 +1,4 @@
-# WikiPrev - Archivio di previsioni verificabili
+# Wikiprev - Archivio di previsioni
 
 Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriva la loro scadenza.
 
@@ -77,6 +77,7 @@ Regole per non perdere dati:
    11. `0011_visit_counter.sql`
    12. `0012_bdi_ai_bonds_2026.sql`
    13. `0013_categories_become_tags.sql`
+   14. `0014_tag_aliases_ai.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');
