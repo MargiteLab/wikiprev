@@ -1013,3 +1013,18 @@ footer {
         margin-bottom: 0.6rem;
     }
 }
+
+/* ---- Footer notice ---- */
+
+.footer-notice {
+    margin: 0.5rem auto 1rem;
+    padding: 0.7rem 1rem;
+    max-width: 640px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.08);
+    overflow-wrap: anywhere;
+}
+
+.footer-notice a {
+    color: #a9d4f5;
+}
