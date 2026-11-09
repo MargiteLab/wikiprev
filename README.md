@@ -79,6 +79,7 @@ Regole per non perdere dati:
    13. `0013_categories_become_tags.sql`
    14. `0014_tag_aliases_ai.sql`
    15. `0015_wrong_predictions_1998_2020.sql`
+   16. `0016_putin_resignation_rumour_2021.sql`
 3. Scegli il codice amministratore. Sempre nel SQL Editor esegui, con un codice lungo almeno 12 caratteri scelto da te:
    ```sql
    select public.set_admin_code('il-tuo-codice-segreto');

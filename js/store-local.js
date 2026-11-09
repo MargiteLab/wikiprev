@@ -26,7 +26,7 @@
     /* Example predictions shipped with the app, grouped by "seed version".
      * A browser that already has saved data receives only the groups newer
      * than the last one it saw, so deleted examples do not come back. */
-    var SEED_VERSION = 13;
+    var SEED_VERSION = 14;
 
     // Real predictions found in the news (added November 2026).
     var SEED_V2 = [
@@ -539,7 +539,28 @@
         }
     ];
 
-    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11, 12: SEED_V12, 13: SEED_V13 };
+    // Rumour of Putin's resignation in early 2021 (added November 2026).
+    var SEED_V14 = [
+        {
+            id: 'seed-v14-putin-dimissioni-2021',
+            tags: [
+                { id: 'geopolitica', label: 'Geopolitica' },
+                { id: 'russia', label: 'Russia' },
+                { id: 'salute', label: 'Salute' },
+                { id: 'politica-internazionale', label: 'Politica internazionale' }
+            ],
+            title: "Vladimir Putin annuncerà le dimissioni all'inizio del 2021 per motivi di salute",
+            author: 'Valery Solovei',
+            source: 'Sky TG24',
+            url: 'https://tg24.sky.it/mondo/2020/11/06/putin-parkinson',
+            madeOn: '2020-11-05',
+            dueDate: '2021-01-31',
+            description: "Il 5 novembre 2020 il tabloid britannico The Sun, ripreso da Daily Mail, New York Post e media italiani, scrisse che Putin aveva sintomi compatibili con il morbo di Parkinson e che si sarebbe dimesso all'inizio del 2021, anche su pressione della famiglia. L'unica fonte con nome era il politologo Valery Solovei, ex professore del MGIMO e oppositore del Cremlino, che a Radio Eco di Mosca disse che Putin avrebbe potuto annunciare le dimissioni a gennaio. In quei giorni era in discussione una legge che avrebbe reso gli ex presidenti senatori a vita con immunità. Il 6 novembre il portavoce del Cremlino Dmitry Peskov definì la notizia «absolute nonsense»: «Everything is fine with the president». Com'è andata: Putin non si è dimesso ed è rimasto presidente.",
+            createdAt: '2026-11-09T17:00:00.000Z'
+        }
+    ];
+
+    var SEED_GROUPS = { 2: SEED_V2, 3: SEED_V3, 5: SEED_V5, 7: SEED_V7, 8: SEED_V8, 11: SEED_V11, 12: SEED_V12, 13: SEED_V13, 14: SEED_V14 };
 
     function seedsAfter(version) {
         var out = [];
