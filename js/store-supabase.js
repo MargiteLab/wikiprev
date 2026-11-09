@@ -3,6 +3,7 @@
  * predictions and add them by typing their name; additions go through the
  * database function add_tagged_prediction (migration 0013). Only the
  * administrator, recognised by a secret code, can delete (delete_prediction).
+ * Links on how a prediction went: add_outcome_link / delete_outcome_link (0017).
  * Database schema: supabase/migrations/. Same asynchronous interface as
  * store-local.js.
  *
@@ -57,14 +58,18 @@
                 description: row.details || '',
                 createdAt: row.created_at,
                 createdByName: row.created_by_name || '',
-                tags: tags
+                tags: tags,
+                // Missing until migration 0017 is applied.
+                outcomeLinks: (Array.isArray(row.outcome_links) ? row.outcome_links : []).map(function (l) {
+                    return { id: l.id, url: l.url, note: l.note || '', addedBy: l.added_by || '', createdAt: l.created_at };
+                })
             };
         }
 
         function describeError(error) {
             var msg = (error && error.message) || String(error);
             // Messages written in Italian by the database functions are shown as they are.
-            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome di un tag|Il nome di un'etichetta|Puoi indicare al massimo|Scegli almeno un tag|Solo l'amministratore può vedere)/.test(msg)) return msg;
+            if (/^(Scrivi il tuo nome|Il nome può|Indica la fonte|Previsione non trovata|Solo l'amministratore|Il nome di un tag|Il nome di un'etichetta|Puoi indicare al massimo|Scegli almeno un tag|Solo l'amministratore può vedere|Com'è andata si potrà|Il link deve|La nota può|Questo link è già|Questa previsione ha già|Link non trovato)/.test(msg)) return msg;
             if (/predictions_dates_check/.test(msg)) return 'La data di verifica non può essere precedente alla data della previsione.';
             if (/source_url_check/.test(msg)) return 'Il link alla fonte deve iniziare con http:// o https://.';
             if (/failed to fetch|network/i.test(msg)) return 'Impossibile contattare il database. Controlla la connessione e riprova.';
@@ -122,6 +127,31 @@
                 var row = await client.from('predictions_view').select('*').eq('id', res.data).single();
                 if (row.error) return { ok: false, errors: [describeError(row.error)] };
                 return { ok: true, saved: true, prediction: toPrediction(row.data) };
+            },
+
+            /* Adds a link to news showing how the prediction went (migration 0017). */
+            addOutcomeLink: async function (predictionId, input) {
+                var res = await client.rpc('add_outcome_link', {
+                    p_prediction_id: predictionId,
+                    p_contributor_name: model.str(input.contributor),
+                    p_url: model.str(input.url),
+                    p_note: model.str(input.note)
+                });
+                if (res.error && /PGRST202|Could not find the function/i.test(res.error.code + ' ' + res.error.message)) {
+                    return { ok: false, errors: ["Per aggiungere com'è andata serve la migrazione 0017 nel SQL Editor di Supabase."] };
+                }
+                if (res.error) return { ok: false, errors: [describeError(res.error)] };
+                var row = await client.from('predictions_view').select('*').eq('id', predictionId).single();
+                if (row.error) return { ok: false, errors: [describeError(row.error)] };
+                return { ok: true, saved: true, prediction: toPrediction(row.data) };
+            },
+
+            removeOutcomeLink: async function (predictionId, linkId, adminCode) {
+                var res = await client.rpc('delete_outcome_link', { p_id: linkId, p_admin_code: adminCode || '' });
+                if (res.error) {
+                    return { ok: false, error: describeError(res.error), notAdmin: res.error.code === '42501' };
+                }
+                return { ok: true };
             },
 
             remove: async function (id, adminCode) {

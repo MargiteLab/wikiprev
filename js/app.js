@@ -339,7 +339,11 @@
             el('div', { className: 'row-cell' }, whoLine(p)),
             el('div', { className: 'row-cell row-date', title: 'Da verificare entro il' }, [icon('far fa-calendar'), shortDate(p.dueDate)]),
             el('div', { className: 'row-cell row-status' + (status && status.expired ? ' expired' : '') }, [
-                el('span', { className: 'dot', 'aria-hidden': 'true' }), status ? status.text : ''
+                el('span', { className: 'dot', 'aria-hidden': 'true' }), status ? status.text : '',
+                (p.outcomeLinks || []).length ? el('a', {
+                    href: predictionUrl(p.id), className: 'prediction-link outcome-count', 'data-id': p.id,
+                    title: "Link alle notizie su com'è andata"
+                }, [icon('fas fa-newspaper'), " Com'è andata: " + p.outcomeLinks.length]) : null
             ]),
             canDelete() ? el('div', { className: 'row-admin' }, el('button', {
                 type: 'button', className: 'delete-btn', 'data-id': p.id, 'aria-label': 'Elimina la previsione', title: 'Elimina'
@@ -420,7 +424,7 @@
 
     async function onDelete(event) {
         var btn = event.target.closest('.delete-btn');
-        if (!btn) return;
+        if (!btn || btn.hasAttribute('data-link')) return;
         // Two-step delete: the first click asks for confirmation on the button itself.
         if (!btn.classList.contains('confirming')) {
             btn.classList.add('confirming');
@@ -553,6 +557,8 @@
         });
         $('predictions-grid').addEventListener('click', onDelete);
         $('detail-card').addEventListener('click', onDelete);
+        $('detail-card').addEventListener('click', onOutcomeDelete);
+        $('detail-card').addEventListener('submit', onOutcomeSubmit);
         $('featured-expired').addEventListener('click', onFeaturedNav);
         $('featured-upcoming').addEventListener('click', onFeaturedNav);
         $('featured-latest').addEventListener('click', onFeaturedNav);
@@ -787,6 +793,132 @@
         }
     }
 
+    /* ---------- "Com'è andata": links to news on how it went ---------- */
+
+    function hostOf(url) {
+        try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return url; }
+    }
+
+    function outcomeSection(p) {
+        var links = p.outcomeLinks || [];
+        var due = p.dueDate && p.dueDate <= todayIso();
+        var children = [
+            el('h3', { className: 'outcome-title' }, [icon('fas fa-newspaper'), " Com'è andata"])
+        ];
+        if (links.length) {
+            children.push(el('ul', { className: 'outcome-list' }, links.map(function (l) {
+                return el('li', null, [
+                    el('a', { href: l.url, target: '_blank', rel: 'noopener noreferrer', className: 'outcome-link' },
+                        [l.note || hostOf(l.url), ' ', icon('fas fa-external-link-alt')]),
+                    el('div', { className: 'outcome-meta' }, [
+                        el('span', null, [icon('fas fa-globe'), ' ' + hostOf(l.url)]),
+                        el('span', { text: 'aggiunto' + (l.addedBy ? ' da ' + l.addedBy : '') + (l.createdAt ? ' il ' + shortDate(l.createdAt) : '') }),
+                        el('a', { href: 'https://web.archive.org/web/*/' + l.url, target: '_blank', rel: 'noopener noreferrer' },
+                            [icon('fas fa-archive'), ' archive.org']),
+                        canDelete() ? el('button', {
+                            type: 'button', className: 'delete-btn outcome-del', 'data-link': l.id, 'data-id': p.id,
+                            title: 'Elimina questo link'
+                        }, [icon('fas fa-trash-alt'), ' Elimina']) : null
+                    ])
+                ]);
+            })));
+        } else if (due) {
+            children.push(el('p', { className: 'outcome-empty', text: 'Nessuna notizia ancora. Se sai com\'è andata, aggiungi il link.' }));
+        }
+        if (due) {
+            children.push(el('form', { className: 'outcome-form', id: 'outcome-form', 'data-id': p.id, novalidate: 'novalidate' }, [
+                el('div', { className: 'outcome-fields' }, [
+                    el('label', null, ['Link alla notizia', el('input', { type: 'url', name: 'url', required: 'required', placeholder: 'https://…', maxlength: '2000' })]),
+                    el('label', null, ['Di cosa parla (facoltativo)', el('input', { type: 'text', name: 'note', maxlength: String(window.WikiPrevModel.MAX_NOTE), placeholder: 'Es. il titolo della notizia' })]),
+                    el('label', null, ['Il tuo nome', el('input', { type: 'text', name: 'contributor', required: 'required', maxlength: '80', value: savedName(), list: 'contributors-list' })])
+                ]),
+                el('button', { type: 'submit', className: 'secondary-btn' }, [icon('fas fa-plus'), ' Aggiungi link']),
+                el('p', { className: 'form-message', id: 'outcome-message', role: 'status' })
+            ]));
+        } else if (p.dueDate) {
+            children.push(el('p', { className: 'outcome-empty', text: 'Dal ' + formatDate(p.dueDate) +
+                " chiunque potrà aggiungere i link alle notizie che dicono com'è andata." }));
+        }
+        return el('section', { className: 'outcome-box', 'aria-label': "Com'è andata" }, children);
+    }
+
+    function replacePrediction(updated) {
+        items = items.map(function (x) { return String(x.id) === String(updated.id) ? updated : x; });
+    }
+
+    async function onOutcomeSubmit(event) {
+        var form = event.target.closest('#outcome-form');
+        if (!form) return;
+        event.preventDefault();
+        var id = form.getAttribute('data-id');
+        var input = { url: form.elements.url.value, note: form.elements.note.value, contributor: form.elements.contributor.value };
+        var p = items.find(function (x) { return String(x.id) === id; });
+        var msg = $('outcome-message');
+        var errors = window.WikiPrevModel.validateOutcomeLink(input, p, todayIso());
+        if (errors.length) {
+            msg.className = 'form-message error';
+            msg.textContent = errors.join(' ');
+            return;
+        }
+        var btn = form.querySelector('button[type=submit]');
+        btn.disabled = true;
+        msg.className = 'form-message';
+        msg.textContent = 'Salvataggio…';
+        var result;
+        try {
+            result = await store.addOutcomeLink(id, input);
+        } catch (e) {
+            result = { ok: false, errors: [e.message] };
+        }
+        btn.disabled = false;
+        if (!result.ok) {
+            msg.className = 'form-message error';
+            msg.textContent = result.errors.join(' ');
+            return;
+        }
+        saveName(input.contributor.trim());
+        replacePrediction(result.prediction);
+        renderList();
+        renderFeatured();
+        route();
+        var after = $('outcome-message');
+        if (after) {
+            after.className = 'form-message ' + (result.saved ? 'success' : 'error');
+            after.textContent = result.saved ? 'Link aggiunto. Grazie!'
+                : 'Link aggiunto, ma non è stato possibile salvarlo in questo browser.';
+        }
+    }
+
+    async function onOutcomeDelete(event) {
+        var btn = event.target.closest('.outcome-del');
+        if (!btn) return;
+        if (!btn.classList.contains('confirming')) {
+            btn.classList.add('confirming');
+            btn.replaceChildren(icon('fas fa-trash-alt'), ' Clicca di nuovo per eliminare');
+            setTimeout(function () {
+                if (!btn.isConnected) return;
+                btn.classList.remove('confirming');
+                btn.replaceChildren(icon('fas fa-trash-alt'), ' Elimina');
+            }, 4000);
+            return;
+        }
+        var id = btn.getAttribute('data-id'), linkId = btn.getAttribute('data-link');
+        btn.disabled = true;
+        var result = await store.removeOutcomeLink(id, linkId, adminCode());
+        if (!result.ok) {
+            if (result.notAdmin) { setAdmin(false); return; }
+            btn.disabled = false;
+            btn.classList.remove('confirming');
+            btn.replaceChildren(icon('fas fa-exclamation-triangle'), ' ' + result.error);
+            return;
+        }
+        items.forEach(function (x) {
+            if (String(x.id) === id) x.outcomeLinks = (x.outcomeLinks || []).filter(function (l) { return String(l.id) !== linkId; });
+        });
+        renderList();
+        route();
+    }
+
     function renderDetail(p) {
         var card = $('detail-card');
         card.replaceChildren();
@@ -824,6 +956,7 @@
                 detailRow('Da verificare entro il', formatDate(p.dueDate)),
                 detailRow('Inserita', formatInserted(p.createdAt) + (p.createdByName ? ' da ' + p.createdByName : ''))
             ].filter(Boolean)),
+            outcomeSection(p),
             el('div', { className: 'share-box' }, [
                 el('label', { for: 'share-url', text: 'Link a questa previsione' }),
                 el('div', { className: 'share-row' }, [

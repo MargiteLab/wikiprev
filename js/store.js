@@ -22,6 +22,8 @@
             list: fail,
             add: fail,
             remove: fail,
+            addOutcomeLink: fail,
+            removeOutcomeLink: fail,
             checkAdminCode: fail,
             tags: fail,
             logVisit: function () { return Promise.resolve(); }
