@@ -865,7 +865,22 @@
         route();
     }
 
+    /* Footer contact: the e-mail address is assembled only when asked for. */
+    function setupContact() {
+        var span = $('contact-email');
+        var btn = $('contact-show');
+        if (!span || !btn) return;
+        btn.addEventListener('click', function () {
+            var address = span.getAttribute('data-u') + '\u0040' + span.getAttribute('data-d');
+            var link = el('a', { href: 'mailto:' + address, text: address });
+            span.replaceChildren(link);
+            btn.remove();
+            link.focus();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        setupContact();
         // A page cached by the browser from an older version may not have the
         // elements this code expects: ask for a reload instead of hanging.
         var required = ['featured-expired', 'featured-upcoming', 'home-view', 'detail-view', 'tag-options', 'filter-tag'];

@@ -1028,3 +1028,19 @@ footer {
 .footer-notice a {
     color: #a9d4f5;
 }
+
+.contact-btn {
+    margin-left: 0.4rem;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    background: none;
+    color: #fff;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.contact-btn:hover,
+.contact-btn:focus-visible {
+    border-color: #fff;
+}
