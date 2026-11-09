@@ -89,7 +89,7 @@
             ' alle ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
 
-    /* "Caricata da Sergio il 06/11/2026 alle 18:05" (or without the name). */
+    /* "Caricata da Mario il 06/11/2026 alle 18:05" (or without the name). */
     function insertedNode(p) {
         var when = formatInserted(p.createdAt);
         if (!when && !p.createdByName) return el('span');
