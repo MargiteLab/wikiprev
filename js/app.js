@@ -541,6 +541,17 @@
             e.preventDefault();
             openPrediction(link.getAttribute('data-id'));
         });
+        // The logo goes to the home page: from a prediction back to the
+        // archive, on the home page back to the top.
+        $('home-link').addEventListener('click', function (e) {
+            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            if (currentDetailId() || window.location.hash) {
+                history.pushState({}, '', window.location.pathname);
+                route();
+            }
+            window.scrollTo(0, 0);
+        });
         $('back-link').addEventListener('click', function (e) {
             e.preventDefault();
             goHome();
