@@ -1,4 +1,4 @@
-# Rebuilds the share pages p/<id>/index.html and their preview images
+# Rebuilds the RSS feeds (feed/nuove.xml, feed/scadute.xml) and the share pages p/<id>/index.html and their preview images
 # p/<id>/anteprima.jpg from the database, so links to single predictions show
 # their own title and picture in Telegram, WhatsApp and similar apps. Commits only when something changed; GitHub Pages then republishes.
 #
@@ -44,7 +44,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add -A p
+          git add -A p feed
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0

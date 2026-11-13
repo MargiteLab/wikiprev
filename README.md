@@ -13,6 +13,7 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Tag: ogni previsione ne ha almeno uno e può averne più di uno (es. "Economia", "TAV", "Promesse politiche"); nuovi tag si creano dal modulo. Fino a novembre 2026 c'erano "categorie" separate: sono diventate tag (migrazione 0013)
 - Ogni previsione mostra quando è stata inserita e da chi
 - **Com'è andata:** chiunque può allegare a una previsione uno o più link a notizie che mostrano com'è andata, con una breve nota facoltativa e il proprio nome, di solito dopo la scadenza ma anche prima, se l'esito è già noto. Solo link, nessun giudizio: chi legge valuta dalle fonti. Solo l'amministratore può togliere un link (migrazione 0017)
+- **Feed RSS:** `feed/nuove.xml` segnala ogni previsione aggiunta, `feed/scadute.xml` ogni previsione la cui scadenza è passata
 - Contatore delle visite, visibile all'amministratore nel riquadro Amministrazione (senza cookie, senza IP)
 
 ## Due modalità
@@ -104,6 +105,16 @@ Per provarlo in locale:
 ```bash
 python3 -m http.server 8000
 ```
+
+## Feed RSS
+
+Due feed per i lettori RSS (Feedly, Inoreader, Thunderbird, bot Telegram e simili):
+
+- `feed/nuove.xml`: le ultime 50 previsioni aggiunte, dalla più recente
+- `feed/scadute.xml`: le ultime 50 previsioni scadute; ognuna compare il giorno dopo la sua scadenza
+
+Li scrive lo stesso script delle pagine di condivisione (`scripts/build-share-pages.mjs`),
+quindi si aggiornano ogni mezz'ora con il workflow "Pagine di condivisione".
 
 ## Anteprime su Telegram e WhatsApp
 

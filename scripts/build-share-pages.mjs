@@ -20,8 +20,14 @@
  *   node scripts/build-share-pages.mjs data.json       # reads predictions_view rows from a file
  *
  * Pages of predictions that no longer exist are removed.
+ *
+ * The script also writes two RSS feeds for feed readers:
+ *   feed/nuove.xml    predictions as they are added
+ *   feed/scadute.xml  predictions as their due date passes
+ * Their text depends only on the predictions, never on the time of the run,
+ * so nothing is committed when nothing changed.
  */
-import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -31,6 +37,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE_URL = 'https://margitelab.github.io/wikiprev/';
 const GENERIC_IMAGE_URL = SITE_URL + 'img/anteprima.png?v=3';
 const OUT_DIR = join(ROOT, 'p');
+const FEED_DIR = join(ROOT, 'feed');
+const FEED_MAX_ITEMS = 50;
 const IMAGE_TEMPLATE_VERSION = 4;   // bump to redraw every image
 
 function readConfig() {
@@ -229,6 +237,81 @@ function page(row, f, imageUrl) {
 `;
 }
 
+/* ---------- RSS feeds ---------- */
+
+/* The day after the due date, at midnight UTC: the moment a prediction counts as expired. */
+function expiryDate(row) {
+    const d = new Date(String(row.due_on).slice(0, 10) + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d;
+}
+
+function feedItem(row, f, kind, date) {
+    const id = safeId(row.id);
+    const link = `${SITE_URL}p/${id}/`;
+    const lines = [
+        f.due ? (f.expired ? 'Scaduta il ' : 'Da verificare entro il ') + f.due : '',
+        f.person ? "Chi l'ha fatta: " + f.person : '',
+        f.outlet ? 'Fonte: ' + f.outlet : '',
+        row.created_by_name ? 'Inserita da: ' + clip(row.created_by_name, 80) : '',
+        f.tags.length ? 'Tag: ' + f.tags.join(', ') : ''
+    ].filter(Boolean);
+    const details = clip(row.details, 600);
+    // HTML for the reader, escaped twice: once as HTML, once as XML text.
+    const body = (details ? `<p>${esc(details)}</p>` : '') + `<p>${lines.map(esc).join('<br>')}</p>`;
+    const image = join(OUT_DIR, id, 'anteprima.jpg');
+    const enclosure = existsSync(image)
+        ? `\n      <enclosure url="${esc(link + 'anteprima.jpg')}" length="${statSync(image).size}" type="image/jpeg"/>`
+        : '';
+    return `    <item>
+      <title>${esc((kind === 'expired' ? 'Scaduta: ' : '') + f.title)}</title>
+      <link>${esc(link)}</link>
+      <guid isPermaLink="false">${esc(link + (kind === 'expired' ? '#scaduta' : ''))}</guid>
+      <pubDate>${date.toUTCString()}</pubDate>
+      <description>${esc(body)}</description>${f.tags.map(t => `\n      <category>${esc(t)}</category>`).join('')}${enclosure}
+    </item>`;
+}
+
+function feedXml(file, title, description, entries) {
+    const newest = entries.length ? entries[0].date : new Date(0);
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${esc(title)}</title>
+    <link>${SITE_URL}</link>
+    <atom:link href="${SITE_URL}feed/${file}" rel="self" type="application/rss+xml"/>
+    <description>${esc(description)}</description>
+    <language>it</language>
+    <lastBuildDate>${newest.toUTCString()}</lastBuildDate>
+${entries.map(e => e.xml).join('\n')}
+  </channel>
+</rss>
+`;
+}
+
+function writeFeeds(rows) {
+    const valid = rows.filter(r => safeId(r.id) && r.statement);
+    const byNewest = (a, b) => b.date - a.date || String(a.id).localeCompare(String(b.id));
+
+    const added = valid.filter(r => r.created_at && !isNaN(Date.parse(r.created_at)))
+        .map(r => ({ id: r.id, row: r, date: new Date(r.created_at) }))
+        .sort(byNewest).slice(0, FEED_MAX_ITEMS)
+        .map(e => ({ date: e.date, xml: feedItem(e.row, facts(e.row), 'added', e.date) }));
+
+    const today = todayIso();
+    const expired = valid.filter(r => r.due_on && String(r.due_on) < today)
+        .map(r => ({ id: r.id, row: r, date: expiryDate(r) }))
+        .sort(byNewest).slice(0, FEED_MAX_ITEMS)
+        .map(e => ({ date: e.date, xml: feedItem(e.row, facts(e.row), 'expired', e.date) }));
+
+    mkdirSync(FEED_DIR, { recursive: true });
+    writeFileSync(join(FEED_DIR, 'nuove.xml'), feedXml('nuove.xml',
+        'Wikiprev - Nuove previsioni', "Le previsioni appena aggiunte all'archivio Wikiprev.", added));
+    writeFileSync(join(FEED_DIR, 'scadute.xml'), feedXml('scadute.xml',
+        'Wikiprev - Previsioni scadute', 'Le previsioni di Wikiprev la cui scadenza è appena passata: è il momento di verificarle.', expired));
+    return { added: added.length, expired: expired.length };
+}
+
 /* ---------- Main ---------- */
 
 const rows = await loadRows(process.argv[2]);
@@ -275,3 +358,6 @@ if (existsSync(OUT_DIR)) {
     }
 }
 console.log(`Share pages: ${keep.size} written, ${drawn} images drawn, ${removed} removed.`);
+
+const feeds = writeFeeds(rows);
+console.log(`Feeds: ${feeds.added} added, ${feeds.expired} expired.`);
