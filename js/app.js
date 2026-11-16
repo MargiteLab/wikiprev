@@ -815,6 +815,9 @@
                         el('span', { text: 'aggiunto' + (l.addedBy ? ' da ' + l.addedBy : '') + (l.createdAt ? ' il ' + shortDate(l.createdAt) : '') }),
                         el('a', { href: 'https://web.archive.org/web/*/' + l.url, target: '_blank', rel: 'noopener noreferrer' },
                             [icon('fas fa-archive'), ' archive.org']),
+                        el('a', { href: 'https://web.archive.org/save/' + l.url, target: '_blank', rel: 'noopener noreferrer',
+                            title: 'Apre archive.org e salva una copia di questa pagina' },
+                            [icon('fas fa-save'), ' salva una copia']),
                         canDelete() ? el('button', {
                             type: 'button', className: 'delete-btn outcome-del', 'data-link': l.id, 'data-id': p.id,
                             title: 'Elimina questo link'
@@ -932,7 +935,11 @@
             sourceValue.push(el('div', { className: 'source-preview' }, [
                 el('span', { className: 'source-host' }, [icon('fas fa-globe'), ' ' + new URL(p.url).hostname.replace(/^www\./, '')]),
                 el('a', { href: 'https://web.archive.org/web/*/' + p.url, target: '_blank', rel: 'noopener noreferrer' },
-                    [icon('fas fa-archive'), ' Copie archiviate (archive.org)'])
+                    [icon('fas fa-archive'), ' Copie archiviate (archive.org)']),
+                // Asks archive.org to save the page as it is now (nothing is saved by this site).
+                el('a', { href: 'https://web.archive.org/save/' + p.url, target: '_blank', rel: 'noopener noreferrer',
+                    title: 'Apre archive.org e salva una copia di questa pagina' },
+                    [icon('fas fa-save'), ' Salva una copia adesso'])
             ]));
         }
         var shareButtons = [

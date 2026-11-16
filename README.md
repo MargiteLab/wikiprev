@@ -6,7 +6,7 @@ Una piattaforma per raccogliere previsioni nel tempo e controllarle quando arriv
 - Aggiunta di previsioni con autore, fonte, link, uno o più tag, data della previsione e scadenza
 - Ricerca, filtro per tag e per intervallo di scadenza, ordinamento (predefinito: inserite di recente)
 - In evidenza due previsioni: a sinistra l'ultima scaduta, a destra la prossima in scadenza, con pulsanti per andare più indietro o più avanti nel tempo
-- Ogni previsione ha una sua pagina (`?p=<id>`) con tutti i dettagli, un link da copiare o condividere e le copie archiviate della fonte su archive.org
+- Ogni previsione ha una sua pagina (`?p=<id>`) con tutti i dettagli, un link da copiare o condividere, le copie archiviate della fonte su archive.org e un collegamento per salvarne una nuova
 - Nessun accesso con email: per aggiungere una previsione basta scrivere il proprio nome
 - Per ogni previsione si sa chi l'ha caricata
 - Solo l'amministratore, con un codice segreto, può eliminare le previsioni
